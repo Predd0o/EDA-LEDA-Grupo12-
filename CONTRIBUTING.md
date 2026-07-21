@@ -1,4 +1,4 @@
-# Como contribuir
+	# Como contribuir
 
 Este documento descreve os fluxos de trabalho do projeto **Análise Comparativa de Desempenho de Segment Trees** (Python, Rust, C++ e Java). Cada atividade pertence a um de quatro tipos: **Implementação**, **Experimentação**, **Análise** ou **Utilitários**.
 
@@ -167,7 +167,7 @@ git push origin impl/rust-segment-tree
 
 **Critérios de correção (antes de abrir o PR):**
 
-- A implementação segue a mesma lógica algorítmica das demais linguagens (array de tamanho ~4n, indexação 2i/2i+1)
+- A implementação segue a mesma lógica algorítmica das demais linguagens (array de tamanho ~4n, indexação 1-based com filhos em 2i e 2i+1)
 - Testes locais confirmam que os resultados batem com uma implementação de referência (ex: força bruta em Python) para entradas pequenas
 - Medição de tempo usa o cronômetro nativo definido no relatório (`std::chrono`, `Instant`, `System.nanoTime()`, `time.perf_counter()`)
 
