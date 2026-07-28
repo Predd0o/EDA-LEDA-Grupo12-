@@ -1,5 +1,11 @@
+//! Implementação de Segment Tree com lazy propagation recursiva.
+//! Suporta queries de soma, mínimo e máximo, e atualizações de intervalo e ponto.
+
 use std::cmp::{max, min};
 
+/// Árvore de segmentos com propagação preguiçosa (lazy propagation).
+///
+/// Suporta queries de soma, mínimo e máximo, e atualizações de intervalo e ponto.
 pub struct SegmentTree {
     n: usize,
     sum_tree: Vec<i64>,
@@ -9,6 +15,16 @@ pub struct SegmentTree {
 }
 
 impl SegmentTree {
+    /// Constrói a SegmentTree a partir do array fornecido.
+    ///
+    /// # Arguments
+    /// * `arr` - Array de entrada de valores `i64`.
+    ///
+    /// # Returns
+    /// Uma instância de `SegmentTree` construída.
+    ///
+    /// # Complexity
+    /// O(n)
     pub fn build(arr: &[i64]) -> Self {
         let n = arr.len();
         let size = 4 * n + 1;
@@ -65,6 +81,15 @@ impl SegmentTree {
         self.lazy[node] += value;
     }
 
+    /// Adiciona `value` a todos os elementos no intervalo `[left, right]`.
+    ///
+    /// # Arguments
+    /// * `left` - Índice inicial do intervalo (inclusive).
+    /// * `right` - Índice final do intervalo (inclusive).
+    /// * `value` - Valor a ser adicionado a cada elemento do intervalo.
+    ///
+    /// # Complexity
+    /// O(log n)
     pub fn update_range(&mut self, left: usize, right: usize, value: i64) {
         if self.n == 0 {
             return;
@@ -95,6 +120,14 @@ impl SegmentTree {
         self.pull(node);
     }
 
+    /// Define o valor do elemento no índice `index` para `value`.
+    ///
+    /// # Arguments
+    /// * `index` - Índice do elemento a atualizar.
+    /// * `value` - Novo valor do elemento.
+    ///
+    /// # Complexity
+    /// O(log n)
     pub fn update_point(&mut self, index: usize, value: i64) {
         if self.n == 0 {
             return;
@@ -126,6 +159,17 @@ impl SegmentTree {
         self.pull(node);
     }
 
+    /// Retorna a soma dos elementos no intervalo `[left, right]`.
+    ///
+    /// # Arguments
+    /// * `left` - Índice inicial do intervalo (inclusive).
+    /// * `right` - Índice final do intervalo (inclusive).
+    ///
+    /// # Returns
+    /// Soma dos elementos no intervalo.
+    ///
+    /// # Complexity
+    /// O(log n)
     pub fn query_sum(&mut self, left: usize, right: usize) -> i64 {
         if self.n == 0 || right < left {
             return 0;
@@ -154,6 +198,17 @@ impl SegmentTree {
         sum_left + sum_right
     }
 
+    /// Retorna o mínimo dos elementos no intervalo `[left, right]`.
+    ///
+    /// # Arguments
+    /// * `left` - Índice inicial do intervalo (inclusive).
+    /// * `right` - Índice final do intervalo (inclusive).
+    ///
+    /// # Returns
+    /// Valor mínimo no intervalo.
+    ///
+    /// # Complexity
+    /// O(log n)
     pub fn query_min(&mut self, left: usize, right: usize) -> i64 {
         if self.n == 0 || right < left {
             return i64::MAX;
@@ -182,6 +237,17 @@ impl SegmentTree {
         min(min_left, min_right)
     }
 
+    /// Retorna o máximo dos elementos no intervalo `[left, right]`.
+    ///
+    /// # Arguments
+    /// * `left` - Índice inicial do intervalo (inclusive).
+    /// * `right` - Índice final do intervalo (inclusive).
+    ///
+    /// # Returns
+    /// Valor máximo no intervalo.
+    ///
+    /// # Complexity
+    /// O(log n)
     pub fn query_max(&mut self, left: usize, right: usize) -> i64 {
         if self.n == 0 || right < left {
             return i64::MIN;
