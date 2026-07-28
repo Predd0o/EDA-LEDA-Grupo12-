@@ -1,0 +1,7 @@
+.git/
+target/
+segtree_rust/target/
+.obsidian/
+*.swp
+*.swo
+*~
