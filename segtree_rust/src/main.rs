@@ -1,8 +1,7 @@
 mod lazy_recursive;
 
-use rand::rngs::StdRng;
-use rand::Rng;
-use rand::SeedableRng;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::time::Instant;
 use lazy_recursive::SegmentTree;
 
@@ -18,153 +17,79 @@ fn parse_arg_usize(args: &[String], flag: &str, default: usize) -> usize {
         .unwrap_or(default)
 }
 
-fn load_operations(load: &str) -> Vec<&'static str> {
+#[derive(Debug, Clone)]
+enum Op {
+    QuerySum { l: usize, r: usize },
+    QueryMin { l: usize, r: usize },
+    QueryMax { l: usize, r: usize },
+    UpdateRange { l: usize, r: usize, value: i64 },
+    UpdatePoint { index: usize, value: i64 },
+}
+
+fn parse_input(path: &str) -> (usize, usize, Vec<i64>, Vec<Op>) {
+    let file = File::open(path).expect(&format!("cannot open input file: {}", path));
+    let reader = BufReader::new(file);
+    let mut lines = reader.lines();
+
+    let header = lines.next().unwrap().expect("empty input file");
+    let parts: Vec<&str> = header.split_whitespace().collect();
+    let n: usize = parts[0].parse().expect("invalid N in header");
+    let m: usize = parts[1].parse().expect("invalid M in header");
+
+    let values_line = lines.next().unwrap().expect("missing values line");
+    let values: Vec<i64> = values_line
+        .split_whitespace()
+        .take(n)
+        .map(|s| s.parse().expect("invalid value"))
+        .collect();
+
+    let mut ops = Vec::with_capacity(m);
+    for line in lines {
+        let line = line.expect("failed to read line");
+        let tokens: Vec<&str> = line.split_whitespace().collect();
+        if tokens.is_empty() {
+            continue;
+        }
+        match tokens[0] {
+            "query" => {
+                let l: usize = tokens[1].parse().expect("invalid l");
+                let r: usize = tokens[2].parse().expect("invalid r");
+                ops.push(Op::QuerySum { l, r });
+                ops.push(Op::QueryMin { l, r });
+                ops.push(Op::QueryMax { l, r });
+            }
+            "update_range" => {
+                let l: usize = tokens[1].parse().expect("invalid l");
+                let r: usize = tokens[2].parse().expect("invalid r");
+                let value: i64 = tokens[3].parse().expect("invalid value");
+                ops.push(Op::UpdateRange { l, r, value });
+            }
+            "update_point" => {
+                let index: usize = tokens[1].parse().expect("invalid index");
+                let value: i64 = tokens[2].parse().expect("invalid value");
+                ops.push(Op::UpdatePoint { index, value });
+            }
+            _ => {}
+        }
+    }
+
+    (n, m, values, ops)
+}
+
+fn load_operations(load: &str, all_ops: &[Op]) -> Vec<Op> {
     match load {
-        "query" => vec!["query_sum", "query_min", "query_max"],
-        "update" => vec!["update_range", "update_point"],
-        "mixed" => vec!["query_sum", "query_min", "query_max", "update_range", "update_point"],
+        "query" => all_ops
+            .iter()
+            .filter(|op| matches!(op, Op::QuerySum { .. } | Op::QueryMin { .. } | Op::QueryMax { .. }))
+            .cloned()
+            .collect(),
+        "update" => all_ops
+            .iter()
+            .filter(|op| matches!(op, Op::UpdateRange { .. } | Op::UpdatePoint { .. }))
+            .cloned()
+            .collect(),
+        "mixed" => all_ops.to_vec(),
         _ => panic!("invalid --load: use query, update, or mixed"),
-    }
-}
-
-fn generate_values(distribution: &str, n: usize, seed: u64) -> Vec<i64> {
-    let mut rng = StdRng::seed_from_u64(seed);
-    match distribution {
-        "random" => (0..n).map(|_| rng.gen_range(-1_000_000..=1_000_000)).collect(),
-        "sorted" => (0..n).map(|x| x as i64).collect(),
-        "nearly_sorted" => {
-            let mut v: Vec<i64> = (0..n).map(|x| x as i64).collect();
-            let swaps = n / 20;
-            for _ in 0..swaps {
-                let i = rng.gen_range(0..n);
-                let j = rng.gen_range(0..n);
-                v.swap(i, j);
-            }
-            v
-        }
-        "duplicates" => (0..n).map(|_| rng.gen_range(-1_000..=1_000)).collect(),
-        "all_equal" => vec![0i64; n],
-        _ => panic!(
-            "invalid --distribution: use random, sorted, nearly_sorted, duplicates, all_equal"
-        ),
-    }
-}
-
-fn random_range(rng: &mut StdRng, n: usize) -> (usize, usize) {
-    let l = rng.gen_range(0..n);
-    let r = rng.gen_range(0..n);
-    if l <= r {
-        (l, r)
-    } else {
-        (r, l)
-    }
-}
-
-fn main() {
-    let args = std::env::args().collect::<Vec<_>>();
-
-    let n = parse_arg_usize(&args, "--size", 100_000);
-    let m = parse_arg_usize(&args, "--ops", n);
-    let load_arg = parse_arg(&args, "--load").unwrap_or_else(|| "query".to_string());
-    let load_ops = load_operations(&load_arg);
-    let distribution = parse_arg(&args, "--distribution")
-        .unwrap_or_else(|| "random".to_string());
-    let seed: u64 = parse_arg(&args, "--seed")
-        .map(|v| v.parse().expect("invalid --seed"))
-        .unwrap_or(42);
-    let warmup: usize = parse_arg_usize(&args, "--warmup", 1);
-    let repetitions: usize = parse_arg_usize(&args, "--repetitions", 1);
-    let output_format = parse_arg(&args, "--output").unwrap_or_else(|| "json".to_string());
-
-    let values = generate_values(&distribution, n, seed);
-    let is_csv = output_format == "csv";
-
-    if is_csv {
-        println!(
-            "language,n,m,load,distribution,seed,op,time_ns"
-        );
-    }
-
-    for _ in 0..warmup {
-        let mut segtree = SegmentTree::build(&values);
-        let mut rng = StdRng::seed_from_u64(seed.wrapping_add(1));
-        for _ in 0..m {
-            let op = load_ops[rng.gen_range(0..load_ops.len())];
-            let (l, r) = random_range(&mut rng, n);
-            match op {
-                "query_sum" => { let _ = segtree.query_sum(l, r); }
-                "query_min" => { let _ = segtree.query_min(l, r); }
-                "query_max" => { let _ = segtree.query_max(l, r); }
-                "update_range" => {
-                    let value = rng.gen_range(-1_000..=1_000);
-                    segtree.update_range(l, r, value);
-                }
-                "update_point" => {
-                    let value = rng.gen_range(-1_000..=1_000);
-                    segtree.update_point(l, value);
-                }
-                _ => {}
-            }
-        }
-    }
-
-    for _ in 0..repetitions {
-        let build_start = Instant::now();
-        let mut segtree = SegmentTree::build(&values);
-        let build_time = build_start.elapsed();
-
-        if is_csv {
-            println!(
-                "{},{},{},{},{},{},{},{}",
-                "rust", n, m, load_arg, distribution, seed, "build", build_time.as_nanos()
-            );
-        } else {
-            println!(
-                r#"{{"language": "rust", "n": {}, "m": {}, "load": "{}", "distribution": "{}", "seed": {}, "op": "build", "time_ns": {}}}"#,
-                n, m, load_arg, distribution, seed, build_time.as_nanos()
-            );
-        }
-
-        let mut rng = StdRng::seed_from_u64(seed.wrapping_add(1));
-        for _ in 0..m {
-            let op = load_ops[rng.gen_range(0..load_ops.len())];
-            let (l, r) = random_range(&mut rng, n);
-            match op {
-                "query_sum" => {
-                    let start = Instant::now();
-                    let _ = segtree.query_sum(l, r);
-                    let time_ns = start.elapsed().as_nanos();
-                    emit(&output_format, "rust", n, m, &load_arg, &distribution, seed, "query_sum", time_ns);
-                }
-                "query_min" => {
-                    let start = Instant::now();
-                    let _ = segtree.query_min(l, r);
-                    let time_ns = start.elapsed().as_nanos();
-                    emit(&output_format, "rust", n, m, &load_arg, &distribution, seed, "query_min", time_ns);
-                }
-                "query_max" => {
-                    let start = Instant::now();
-                    let _ = segtree.query_max(l, r);
-                    let time_ns = start.elapsed().as_nanos();
-                    emit(&output_format, "rust", n, m, &load_arg, &distribution, seed, "query_max", time_ns);
-                }
-                "update_range" => {
-                    let value = rng.gen_range(-1_000..=1_000);
-                    let start = Instant::now();
-                    segtree.update_range(l, r, value);
-                    let time_ns = start.elapsed().as_nanos();
-                    emit(&output_format, "rust", n, m, &load_arg, &distribution, seed, "update_range", time_ns);
-                }
-                "update_point" => {
-                    let value = rng.gen_range(-1_000..=1_000);
-                    let start = Instant::now();
-                    segtree.update_point(l, value);
-                    let time_ns = start.elapsed().as_nanos();
-                    emit(&output_format, "rust", n, m, &load_arg, &distribution, seed, "update_point", time_ns);
-                }
-                _ => {}
-            }
-        }
     }
 }
 
@@ -174,20 +99,85 @@ fn emit(
     n: usize,
     m: usize,
     load: &str,
-    distribution: &str,
-    seed: u64,
     op: &str,
     time_ns: u128,
 ) {
     if format == "csv" {
-        println!(
-            "{},{},{},{},{},{},{},{}",
-            language, n, m, load, distribution, seed, op, time_ns
-        );
+        println!("{},{},{},{},{},{}", language, n, m, load, op, time_ns);
     } else {
         println!(
-            r#"{{"language": "{}", "n": {}, "m": {}, "load": "{}", "distribution": "{}", "seed": {}, "op": "{}", "time_ns": {}}}"#,
-            language, n, m, load, distribution, seed, op, time_ns
+            r#"{{"language": "{}", "n": {}, "m": {}, "load": "{}", "op": "{}", "time_ns": {}}}"#,
+            language, n, m, load, op, time_ns
         );
+    }
+}
+
+fn main() {
+    let args = std::env::args().collect::<Vec<_>>();
+
+    let input_path = parse_arg(&args, "--input")
+        .expect("required: --input <path>");
+    let load_arg = parse_arg(&args, "--load").unwrap_or_else(|| "query".to_string());
+    let warmup: usize = parse_arg_usize(&args, "--warmup", 1);
+    let repetitions: usize = parse_arg_usize(&args, "--repetitions", 1);
+    let output_format = parse_arg(&args, "--output").unwrap_or_else(|| "json".to_string());
+
+    let (n, m, values, all_ops) = parse_input(&input_path);
+    let load_ops = load_operations(&load_arg, &all_ops);
+    let is_csv = output_format == "csv";
+
+    if is_csv {
+        println!("language,n,m,load,op,time_ns");
+    }
+
+    for _ in 0..warmup {
+        let mut segtree = SegmentTree::build(&values);
+        for op in &load_ops {
+            match op {
+                Op::QuerySum { l, r } => { let _ = segtree.query_sum(*l, *r); }
+                Op::QueryMin { l, r } => { let _ = segtree.query_min(*l, *r); }
+                Op::QueryMax { l, r } => { let _ = segtree.query_max(*l, *r); }
+                Op::UpdateRange { l, r, value } => { segtree.update_range(*l, *r, *value); }
+                Op::UpdatePoint { index, value } => { segtree.update_point(*index, *value); }
+            }
+        }
+    }
+
+    for _ in 0..repetitions {
+        let build_start = Instant::now();
+        let mut segtree = SegmentTree::build(&values);
+        let build_time = build_start.elapsed();
+
+        emit(&output_format, "rust", n, m, &load_arg, "build", build_time.as_nanos());
+
+        for op in &load_ops {
+            match op {
+                Op::QuerySum { l, r } => {
+                    let start = Instant::now();
+                    let _ = segtree.query_sum(*l, *r);
+                    emit(&output_format, "rust", n, m, &load_arg, "query_sum", start.elapsed().as_nanos());
+                }
+                Op::QueryMin { l, r } => {
+                    let start = Instant::now();
+                    let _ = segtree.query_min(*l, *r);
+                    emit(&output_format, "rust", n, m, &load_arg, "query_min", start.elapsed().as_nanos());
+                }
+                Op::QueryMax { l, r } => {
+                    let start = Instant::now();
+                    let _ = segtree.query_max(*l, *r);
+                    emit(&output_format, "rust", n, m, &load_arg, "query_max", start.elapsed().as_nanos());
+                }
+                Op::UpdateRange { l, r, value } => {
+                    let start = Instant::now();
+                    segtree.update_range(*l, *r, *value);
+                    emit(&output_format, "rust", n, m, &load_arg, "update_range", start.elapsed().as_nanos());
+                }
+                Op::UpdatePoint { index, value } => {
+                    let start = Instant::now();
+                    segtree.update_point(*index, *value);
+                    emit(&output_format, "rust", n, m, &load_arg, "update_point", start.elapsed().as_nanos());
+                }
+            }
+        }
     }
 }
