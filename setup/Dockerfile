@@ -1,16 +1,38 @@
-FROM debian:bookworm-slim
+# Multi-language benchmark: C++, Rust, Java, Python
+
+# Stage 1: Builder - compile tools for all languages
+FROM debian:bookworm-slim AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     g++ \
-    openjdk-17-jdk \
-    python3 \
-    python3-pip \
+    make \
+    pkg-config \
     curl \
     ca-certificates \
-    pkg-config \
-    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y default stable \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Stage 2: Runtime - minimal with all language runtimes
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    python3 \
+    python3-pip \
+    openjdk-17-jre-headless \
+    build-essential \
+    g++ \
+    make \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Rust from builder
+COPY --from=builder /root/.cargo /root/.cargo
+COPY --from=builder /root/.rustup /root/.rustup
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 ENV RUSTUP_HOME="/root/.rustup"
