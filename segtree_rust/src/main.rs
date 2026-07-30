@@ -99,15 +99,20 @@ fn emit(
     n: usize,
     m: usize,
     load: &str,
+    input_file: &str,
+    ops_executed: usize,
     op: &str,
     time_ns: u128,
 ) {
     if format == "csv" {
-        println!("{},{},{},{},{},{}", language, n, m, load, op, time_ns);
+        println!(
+            "{},{},{},{},{},{},{},{}",
+            language, n, m, load, input_file, ops_executed, op, time_ns
+        );
     } else {
         println!(
-            r#"{{"language": "{}", "n": {}, "m": {}, "load": "{}", "op": "{}", "time_ns": {}}}"#,
-            language, n, m, load, op, time_ns
+            r#"{{"language": "{}", "n": {}, "m": {}, "load": "{}", "input_file": "{}", "ops_executed": {}, "op": "{}", "time_ns": {}}}"#,
+            language, n, m, load, input_file, ops_executed, op, time_ns
         );
     }
 }
@@ -124,10 +129,11 @@ fn main() {
 
     let (n, m, values, all_ops) = parse_input(&input_path);
     let load_ops = load_operations(&load_arg, &all_ops);
+    let ops_executed = load_ops.len();
     let is_csv = output_format == "csv";
 
     if is_csv {
-        println!("language,n,m,load,op,time_ns");
+        println!("language,n,m,load,input_file,ops_executed,op,time_ns");
     }
 
     for _ in 0..warmup {
@@ -148,34 +154,34 @@ fn main() {
         let mut segtree = SegmentTree::build(&values);
         let build_time = build_start.elapsed();
 
-        emit(&output_format, "rust", n, m, &load_arg, "build", build_time.as_nanos());
+        emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "build", build_time.as_nanos());
 
         for op in &load_ops {
             match op {
                 Op::QuerySum { l, r } => {
                     let start = Instant::now();
                     let _ = segtree.query_sum(*l, *r);
-                    emit(&output_format, "rust", n, m, &load_arg, "query_sum", start.elapsed().as_nanos());
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_sum", start.elapsed().as_nanos());
                 }
                 Op::QueryMin { l, r } => {
                     let start = Instant::now();
                     let _ = segtree.query_min(*l, *r);
-                    emit(&output_format, "rust", n, m, &load_arg, "query_min", start.elapsed().as_nanos());
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_min", start.elapsed().as_nanos());
                 }
                 Op::QueryMax { l, r } => {
                     let start = Instant::now();
                     let _ = segtree.query_max(*l, *r);
-                    emit(&output_format, "rust", n, m, &load_arg, "query_max", start.elapsed().as_nanos());
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_max", start.elapsed().as_nanos());
                 }
                 Op::UpdateRange { l, r, value } => {
                     let start = Instant::now();
                     segtree.update_range(*l, *r, *value);
-                    emit(&output_format, "rust", n, m, &load_arg, "update_range", start.elapsed().as_nanos());
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_range", start.elapsed().as_nanos());
                 }
                 Op::UpdatePoint { index, value } => {
                     let start = Instant::now();
                     segtree.update_point(*index, *value);
-                    emit(&output_format, "rust", n, m, &load_arg, "update_point", start.elapsed().as_nanos());
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_point", start.elapsed().as_nanos());
                 }
             }
         }
