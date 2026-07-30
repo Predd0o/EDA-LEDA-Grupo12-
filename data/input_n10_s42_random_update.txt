@@ -1,0 +1,12 @@
+10 10
+340975 -766522 -947549 555144 -423222 -486425 -531894 -707368 544492 -785053
+update_range 2 4 964
+update_point 5 375
+update_range 7 9 20
+update_range 6 8 180
+update_point 9 745
+update_point 6 -640
+update_range 1 1 -231
+update_range 1 2 49
+update_point 2 581
+update_point 9 37
