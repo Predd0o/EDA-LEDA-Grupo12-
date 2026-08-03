@@ -28,7 +28,7 @@ def generate_values(distribution, n, seed):
         )
 
 
-def generate_operations(load, m, n, seed):
+def generate_operations(load, m, n, seed, query_ratio=1 / 3, update_range_ratio=1 / 3):
     rng = random.Random(seed + 1)
     ops = []
     for _ in range(m):
@@ -52,7 +52,11 @@ def generate_operations(load, m, n, seed):
                 value = rng.randint(-1_000, 1_000)
                 ops.append(f"update_point {index} {value}")
         elif load == "mixed":
-            op_type = rng.choice(["query", "update_range", "update_point"])
+            op_type = rng.choices(
+                ["query", "update_range", "update_point"],
+                weights=[query_ratio, update_range_ratio, 1 - query_ratio - update_range_ratio],
+                k=1,
+            )[0]
             if op_type == "query":
                 l = rng.randint(0, n - 1)
                 r = rng.randint(0, n - 1)
@@ -95,6 +99,18 @@ def main():
         help="Operation load type",
     )
     parser.add_argument(
+        "--query-ratio",
+        type=float,
+        default=1 / 3,
+        help="Proportion of query operations in mixed load (default: 0.33)",
+    )
+    parser.add_argument(
+        "--update-range-ratio",
+        type=float,
+        default=1 / 3,
+        help="Proportion of update_range operations in mixed load (default: 0.33)",
+    )
+    parser.add_argument(
         "--output", default="data/", help="Output directory"
     )
     args = parser.parse_args()
@@ -104,9 +120,18 @@ def main():
     distribution = args.distribution
     load = args.load
     seed = args.seed
+    query_ratio = args.query_ratio
+    update_range_ratio = args.update_range_ratio
+
+    if load == "mixed":
+        total = query_ratio + update_range_ratio
+        if total > 1.0:
+            raise ValueError(
+                f"query-ratio + update-range-ratio must be <= 1.0, got {total}"
+            )
 
     values = generate_values(distribution, n, seed)
-    ops = generate_operations(load, m, n, seed)
+    ops = generate_operations(load, m, n, seed, query_ratio, update_range_ratio)
 
     filename = f"input_n{n}_s{seed}_{distribution}_{load}.txt"
     filepath = os.path.join(args.output, filename)

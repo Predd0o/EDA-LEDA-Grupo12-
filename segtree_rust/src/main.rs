@@ -103,16 +103,19 @@ fn emit(
     ops_executed: usize,
     op: &str,
     time_ns: u128,
+    comparisons: u64,
+    assignments: u64,
+    array_accesses: u64,
 ) {
     if format == "csv" {
         println!(
-            "{},{},{},{},{},{},{},{}",
-            language, n, m, load, input_file, ops_executed, op, time_ns
+            "{},{},{},{},{},{},{},{},{},{},{}",
+            language, n, m, load, input_file, ops_executed, op, time_ns, comparisons, assignments, array_accesses
         );
     } else {
         println!(
-            r#"{{"language": "{}", "n": {}, "m": {}, "load": "{}", "input_file": "{}", "ops_executed": {}, "op": "{}", "time_ns": {}}}"#,
-            language, n, m, load, input_file, ops_executed, op, time_ns
+            r#"{{"language": "{}", "n": {}, "m": {}, "load": "{}", "input_file": "{}", "ops_executed": {}, "op": "{}", "time_ns": {}, "comparisons": {}, "assignments": {}, "array_accesses": {}}}"#,
+            language, n, m, load, input_file, ops_executed, op, time_ns, comparisons, assignments, array_accesses
         );
     }
 }
@@ -133,7 +136,7 @@ fn main() {
     let is_csv = output_format == "csv";
 
     if is_csv {
-        println!("language,n,m,load,input_file,ops_executed,op,time_ns");
+        println!("language,n,m,load,input_file,ops_executed,op,time_ns,comparisons,assignments,array_accesses");
     }
 
     for _ in 0..warmup {
@@ -153,35 +156,47 @@ fn main() {
         let build_start = Instant::now();
         let mut segtree = SegmentTree::build(&values);
         let build_time = build_start.elapsed();
+        let build_counters = segtree.counters().clone();
 
-        emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "build", build_time.as_nanos());
+        emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "build", build_time.as_nanos(), build_counters.comparisons, build_counters.assignments, build_counters.array_accesses);
 
         for op in &load_ops {
+            segtree.reset_counters();
             match op {
                 Op::QuerySum { l, r } => {
                     let start = Instant::now();
                     let _ = segtree.query_sum(*l, *r);
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_sum", start.elapsed().as_nanos());
+                    let elapsed = start.elapsed();
+                    let c = segtree.counters();
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_sum", elapsed.as_nanos(), c.comparisons, c.assignments, c.array_accesses);
                 }
                 Op::QueryMin { l, r } => {
                     let start = Instant::now();
                     let _ = segtree.query_min(*l, *r);
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_min", start.elapsed().as_nanos());
+                    let elapsed = start.elapsed();
+                    let c = segtree.counters();
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_min", elapsed.as_nanos(), c.comparisons, c.assignments, c.array_accesses);
                 }
                 Op::QueryMax { l, r } => {
                     let start = Instant::now();
                     let _ = segtree.query_max(*l, *r);
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_max", start.elapsed().as_nanos());
+                    let elapsed = start.elapsed();
+                    let c = segtree.counters();
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_max", elapsed.as_nanos(), c.comparisons, c.assignments, c.array_accesses);
                 }
                 Op::UpdateRange { l, r, value } => {
                     let start = Instant::now();
                     segtree.update_range(*l, *r, *value);
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_range", start.elapsed().as_nanos());
+                    let elapsed = start.elapsed();
+                    let c = segtree.counters();
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_range", elapsed.as_nanos(), c.comparisons, c.assignments, c.array_accesses);
                 }
                 Op::UpdatePoint { index, value } => {
                     let start = Instant::now();
                     segtree.update_point(*index, *value);
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_point", start.elapsed().as_nanos());
+                    let elapsed = start.elapsed();
+                    let c = segtree.counters();
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_point", elapsed.as_nanos(), c.comparisons, c.assignments, c.array_accesses);
                 }
             }
         }

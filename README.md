@@ -40,8 +40,6 @@ Experimento comparativo de Segment Tree (lazy propagation, add-semantics, sum/mi
 
 #### Contagem de operações primitivas
 
-#### Uso de memória
-
 #### Escala dos gráficos
 
 ### 3.4 Convenção de Resultados
