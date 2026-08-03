@@ -11,6 +11,8 @@ class SegmentTree:
         tree_sum (list): o array que armazena os nós da Segment Tree de Soma.
         lazy (list): array utilizado para armazenar atualizações pendentes nos
                      valores dos nós, seguindo o mecanismo de Lazy Propagation.
+        nodes_visited (int): o contador para o número de nós visitados durante
+                    alguma operação na árvore.
         n (int): o tamanho do array original.
     """
 
@@ -27,6 +29,7 @@ class SegmentTree:
         self.tree_min = [0] * (4 * self.n)
         self.tree_sum = [0] * (4 * self.n)
         self.lazy = [0] * (4 * self.n)
+        self.nodes_visited = 0
         self._build(arr, 1, 0, self.n - 1)
 
     def _build(self, arr, node, start, end):
@@ -41,6 +44,9 @@ class SegmentTree:
             start (int): o limite inicial do intervalo representado pelo nó.
             end (int): o limite final do intervalo representado pelo nó.
         """
+        self.nodes_visited += 1 # toda chamada de método recursivo é um acesso a nó
+        # por isso, todo início desse tipo de método possuirá essa incrementação 
+
         if start == end:
             self.tree_sum[node] = arr[start]
             self.tree_min[node] = arr[start]
@@ -130,6 +136,8 @@ class SegmentTree:
             idx (int): o índice do elemento original que está sendo atualizado.
             val (int): o novo valor a ser definido.
         """
+        self.nodes_visited += 1
+
         if start == end:
             self.tree_sum[node] = val
             self.tree_min[node] = val
@@ -172,6 +180,8 @@ class SegmentTree:
             r (int): o limite final do intervalo a ser atualizado.
             val (int): o valor a ser somado.
         """
+        self.nodes_visited += 1
+
         # nó com intervalo totalmente fora de [l,r]
         if r < start or end < l: 
             return
@@ -219,6 +229,8 @@ class SegmentTree:
         Returns:
             int: a soma no intervalo analisado, ou 0 se estiver fora dos limites.
         """
+        self.nodes_visited += 1
+
         if r < start or end < l:
             return 0
 
@@ -261,6 +273,8 @@ class SegmentTree:
             intervalo do nó estiver fora dos limites de [l,r] (para não atrapalhar o cálculo
             do mínimo).
         """
+        self.nodes_visited += 1
+
         if r < start or end < l:
             return float("inf")
 
@@ -305,6 +319,8 @@ class SegmentTree:
             intervalo do nó estiver fora dos limites de [l,r] (para não atrapalhar o
             cálculo do máximo).
         """
+        self.nodes_visited += 1
+
         if r < start or end < l:
             return float("-inf")
 
@@ -358,3 +374,16 @@ class SegmentTree:
         """
         if l < 0 or r >= self.n or l > r:
             raise ValueError("Intervalo inválido: [" + str(l) + ", " + str(r) + "]")
+
+    def reset_counter(self):
+        """
+        Método responsável por zerar o contador "nodes_visited" ao final de cada
+        operação de update (atualização) ou de query (consulta).
+        """
+        self.nodes_visited = 0
+
+    def get_counter(self):
+        """
+        Método responsável por devolver o número de nós visitados, contido no contador.
+        """
+        return self.nodes_visited
