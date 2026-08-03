@@ -94,7 +94,6 @@ fn load_operations(load: &str, all_ops: &[Op]) -> Vec<Op> {
 }
 
 fn emit(
-    format: &str,
     language: &str,
     n: usize,
     m: usize,
@@ -105,17 +104,10 @@ fn emit(
     time_ns: u128,
     primitives: u64,
 ) {
-    if format == "csv" {
-        println!(
-            "{},{},{},{},{},{},{},{},{}",
-            language, n, m, load, input_file, ops_executed, op, time_ns, primitives
-        );
-    } else {
-        println!(
-            r#"{{"language": "{}", "n": {}, "m": {}, "load": "{}", "input_file": "{}", "ops_executed": {}, "op": "{}", "time_ns": {}, "primitives": {}}}"#,
-            language, n, m, load, input_file, ops_executed, op, time_ns, primitives
-        );
-    }
+    println!(
+        "{},{},{},{},{},{},{},{},{}",
+        language, n, m, load, input_file, ops_executed, op, time_ns, primitives
+    );
 }
 
 fn main() {
@@ -126,16 +118,12 @@ fn main() {
     let load_arg = parse_arg(&args, "--load").unwrap_or_else(|| "query".to_string());
     let warmup: usize = parse_arg_usize(&args, "--warmup", 1);
     let repetitions: usize = parse_arg_usize(&args, "--repetitions", 1);
-    let output_format = parse_arg(&args, "--output").unwrap_or_else(|| "json".to_string());
 
     let (n, m, values, all_ops) = parse_input(&input_path);
     let load_ops = load_operations(&load_arg, &all_ops);
     let ops_executed = load_ops.len();
-    let is_csv = output_format == "csv";
 
-    if is_csv {
-        println!("language,n,m,load,input_file,ops_executed,op,time_ns,primitives");
-    }
+    println!("language,n,m,load,input_file,ops_executed,op,time_ns,primitives");
 
     for _ in 0..warmup {
         let mut segtree = SegmentTree::build(&values);
@@ -156,7 +144,7 @@ fn main() {
         let build_time = build_start.elapsed();
         let build_counters = segtree.counters().clone();
 
-        emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "build", build_time.as_nanos(), build_counters.primitives);
+        emit("rust", n, m, &load_arg, &input_path, ops_executed, "build", build_time.as_nanos(), build_counters.primitives);
 
         for op in &load_ops {
             segtree.reset_counters();
@@ -166,35 +154,35 @@ fn main() {
                     let _ = segtree.query_sum(*l, *r);
                     let elapsed = start.elapsed();
                     let c = segtree.counters();
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_sum", elapsed.as_nanos(), c.primitives);
+                    emit("rust", n, m, &load_arg, &input_path, ops_executed, "query_sum", elapsed.as_nanos(), c.primitives);
                 }
                 Op::QueryMin { l, r } => {
                     let start = Instant::now();
                     let _ = segtree.query_min(*l, *r);
                     let elapsed = start.elapsed();
                     let c = segtree.counters();
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_min", elapsed.as_nanos(), c.primitives);
+                    emit("rust", n, m, &load_arg, &input_path, ops_executed, "query_min", elapsed.as_nanos(), c.primitives);
                 }
                 Op::QueryMax { l, r } => {
                     let start = Instant::now();
                     let _ = segtree.query_max(*l, *r);
                     let elapsed = start.elapsed();
                     let c = segtree.counters();
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_max", elapsed.as_nanos(), c.primitives);
+                    emit("rust", n, m, &load_arg, &input_path, ops_executed, "query_max", elapsed.as_nanos(), c.primitives);
                 }
                 Op::UpdateRange { l, r, value } => {
                     let start = Instant::now();
                     segtree.update_range(*l, *r, *value);
                     let elapsed = start.elapsed();
                     let c = segtree.counters();
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_range", elapsed.as_nanos(), c.primitives);
+                    emit("rust", n, m, &load_arg, &input_path, ops_executed, "update_range", elapsed.as_nanos(), c.primitives);
                 }
                 Op::UpdatePoint { index, value } => {
                     let start = Instant::now();
                     segtree.update_point(*index, *value);
                     let elapsed = start.elapsed();
                     let c = segtree.counters();
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_point", elapsed.as_nanos(), c.primitives);
+                    emit("rust", n, m, &load_arg, &input_path, ops_executed, "update_point", elapsed.as_nanos(), c.primitives);
                 }
             }
         }
