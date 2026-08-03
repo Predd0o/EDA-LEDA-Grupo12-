@@ -103,19 +103,17 @@ fn emit(
     ops_executed: usize,
     op: &str,
     time_ns: u128,
-    comparisons: u64,
-    assignments: u64,
-    array_accesses: u64,
+    primitives: u64,
 ) {
     if format == "csv" {
         println!(
-            "{},{},{},{},{},{},{},{},{},{},{}",
-            language, n, m, load, input_file, ops_executed, op, time_ns, comparisons, assignments, array_accesses
+            "{},{},{},{},{},{},{},{},{}",
+            language, n, m, load, input_file, ops_executed, op, time_ns, primitives
         );
     } else {
         println!(
-            r#"{{"language": "{}", "n": {}, "m": {}, "load": "{}", "input_file": "{}", "ops_executed": {}, "op": "{}", "time_ns": {}, "comparisons": {}, "assignments": {}, "array_accesses": {}}}"#,
-            language, n, m, load, input_file, ops_executed, op, time_ns, comparisons, assignments, array_accesses
+            r#"{{"language": "{}", "n": {}, "m": {}, "load": "{}", "input_file": "{}", "ops_executed": {}, "op": "{}", "time_ns": {}, "primitives": {}}}"#,
+            language, n, m, load, input_file, ops_executed, op, time_ns, primitives
         );
     }
 }
@@ -136,7 +134,7 @@ fn main() {
     let is_csv = output_format == "csv";
 
     if is_csv {
-        println!("language,n,m,load,input_file,ops_executed,op,time_ns,comparisons,assignments,array_accesses");
+        println!("language,n,m,load,input_file,ops_executed,op,time_ns,primitives");
     }
 
     for _ in 0..warmup {
@@ -158,7 +156,7 @@ fn main() {
         let build_time = build_start.elapsed();
         let build_counters = segtree.counters().clone();
 
-        emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "build", build_time.as_nanos(), build_counters.comparisons, build_counters.assignments, build_counters.array_accesses);
+        emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "build", build_time.as_nanos(), build_counters.primitives);
 
         for op in &load_ops {
             segtree.reset_counters();
@@ -168,35 +166,35 @@ fn main() {
                     let _ = segtree.query_sum(*l, *r);
                     let elapsed = start.elapsed();
                     let c = segtree.counters();
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_sum", elapsed.as_nanos(), c.comparisons, c.assignments, c.array_accesses);
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_sum", elapsed.as_nanos(), c.primitives);
                 }
                 Op::QueryMin { l, r } => {
                     let start = Instant::now();
                     let _ = segtree.query_min(*l, *r);
                     let elapsed = start.elapsed();
                     let c = segtree.counters();
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_min", elapsed.as_nanos(), c.comparisons, c.assignments, c.array_accesses);
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_min", elapsed.as_nanos(), c.primitives);
                 }
                 Op::QueryMax { l, r } => {
                     let start = Instant::now();
                     let _ = segtree.query_max(*l, *r);
                     let elapsed = start.elapsed();
                     let c = segtree.counters();
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_max", elapsed.as_nanos(), c.comparisons, c.assignments, c.array_accesses);
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "query_max", elapsed.as_nanos(), c.primitives);
                 }
                 Op::UpdateRange { l, r, value } => {
                     let start = Instant::now();
                     segtree.update_range(*l, *r, *value);
                     let elapsed = start.elapsed();
                     let c = segtree.counters();
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_range", elapsed.as_nanos(), c.comparisons, c.assignments, c.array_accesses);
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_range", elapsed.as_nanos(), c.primitives);
                 }
                 Op::UpdatePoint { index, value } => {
                     let start = Instant::now();
                     segtree.update_point(*index, *value);
                     let elapsed = start.elapsed();
                     let c = segtree.counters();
-                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_point", elapsed.as_nanos(), c.comparisons, c.assignments, c.array_accesses);
+                    emit(&output_format, "rust", n, m, &load_arg, &input_path, ops_executed, "update_point", elapsed.as_nanos(), c.primitives);
                 }
             }
         }

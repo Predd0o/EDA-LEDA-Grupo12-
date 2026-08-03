@@ -6,24 +6,16 @@ use std::cmp::{max, min};
 /// Contadores de instrumentação de operações primitivas.
 #[derive(Debug, Clone)]
 pub struct Counters {
-    pub comparisons: u64,
-    pub assignments: u64,
-    pub array_accesses: u64,
+    pub primitives: u64,
 }
 
 impl Counters {
     fn new() -> Self {
-        Counters {
-            comparisons: 0,
-            assignments: 0,
-            array_accesses: 0,
-        }
+        Counters { primitives: 0 }
     }
 
     fn reset(&mut self) {
-        self.comparisons = 0;
-        self.assignments = 0;
-        self.array_accesses = 0;
+        self.primitives = 0;
     }
 }
 
@@ -76,21 +68,21 @@ impl SegmentTree {
     }
 
     fn build_helper(&mut self, node: usize, i: usize, j: usize, arr: &[i64]) {
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if i == j {
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
             self.sum_tree[node] = arr[i];
-            self.counters.assignments += 1;
-            self.counters.array_accesses += 1;
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
             self.min_tree[node] = arr[i];
-            self.counters.assignments += 1;
-            self.counters.array_accesses += 1;
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
             self.max_tree[node] = arr[i];
-            self.counters.assignments += 1;
-            self.counters.array_accesses += 1;
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
             return;
         }
         let mid = (i + j) / 2;
@@ -104,62 +96,62 @@ impl SegmentTree {
     fn pull(&mut self, node: usize) {
         let left_child = 2 * node;
         let right_child = 2 * node + 1;
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
         let left_sum = self.sum_tree[left_child];
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
         let right_sum = self.sum_tree[right_child];
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
         self.sum_tree[node] = left_sum + right_sum;
-        self.counters.assignments += 1;
-        self.counters.comparisons += 1;
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
+        self.counters.primitives += 1;
+        self.counters.primitives += 1;
         let left_min = self.min_tree[left_child];
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
         let right_min = self.min_tree[right_child];
-        self.counters.array_accesses += 1;
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
+        self.counters.primitives += 1;
         self.min_tree[node] = min(left_min, right_min);
-        self.counters.assignments += 1;
-        self.counters.comparisons += 1;
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
+        self.counters.primitives += 1;
+        self.counters.primitives += 1;
         let left_max = self.max_tree[left_child];
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
         let right_max = self.max_tree[right_child];
-        self.counters.array_accesses += 1;
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
+        self.counters.primitives += 1;
         self.max_tree[node] = max(left_max, right_max);
-        self.counters.assignments += 1;
+        self.counters.primitives += 1;
     }
 
     fn push(&mut self, node: usize, i: usize, j: usize) {
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if self.lazy[node] != 0 {
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
             let mid = (i + j) / 2;
             self.apply_lazy(2 * node, i, mid, self.lazy[node]);
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
             self.apply_lazy(2 * node + 1, mid + 1, j, self.lazy[node]);
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
             self.lazy[node] = 0;
-            self.counters.assignments += 1;
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
         }
     }
 
     fn apply_lazy(&mut self, node: usize, start: usize, end: usize, value: i64) {
         let range_size = (end - start + 1) as i64;
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
         self.sum_tree[node] += value * range_size;
-        self.counters.assignments += 1;
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
+        self.counters.primitives += 1;
         self.min_tree[node] += value;
-        self.counters.assignments += 1;
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
+        self.counters.primitives += 1;
         self.max_tree[node] += value;
-        self.counters.assignments += 1;
-        self.counters.array_accesses += 1;
+        self.counters.primitives += 1;
+        self.counters.primitives += 1;
         self.lazy[node] += value;
-        self.counters.assignments += 1;
+        self.counters.primitives += 1;
     }
 
     /// Adiciona `value` a todos os elementos no intervalo `[left, right]`.
@@ -187,11 +179,11 @@ impl SegmentTree {
         right: usize,
         value: i64,
     ) {
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if right < i || j < left {
             return;
         }
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if left <= i && j <= right {
             self.apply_lazy(node, i, j, value);
             return;
@@ -226,26 +218,26 @@ impl SegmentTree {
         index: usize,
         value: i64,
     ) {
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if i == j {
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
             self.sum_tree[node] = value;
-            self.counters.assignments += 1;
-            self.counters.array_accesses += 1;
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
             self.min_tree[node] = value;
-            self.counters.assignments += 1;
-            self.counters.array_accesses += 1;
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
             self.max_tree[node] = value;
-            self.counters.assignments += 1;
-            self.counters.array_accesses += 1;
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
+            self.counters.primitives += 1;
             return;
         }
         self.push(node, i, j);
         let mid = (i + j) / 2;
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if index <= mid {
             self.update_point_helper(2 * node, i, mid, index, value);
         } else {
@@ -280,13 +272,13 @@ impl SegmentTree {
         left: usize,
         right: usize,
     ) -> i64 {
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if right < i || j < left {
             return 0;
         }
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if left <= i && j <= right {
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
             return self.sum_tree[node];
         }
         self.push(node, i, j);
@@ -322,13 +314,13 @@ impl SegmentTree {
         left: usize,
         right: usize,
     ) -> i64 {
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if right < i || j < left {
             return i64::MAX;
         }
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if left <= i && j <= right {
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
             return self.min_tree[node];
         }
         self.push(node, i, j);
@@ -364,13 +356,13 @@ impl SegmentTree {
         left: usize,
         right: usize,
     ) -> i64 {
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if right < i || j < left {
             return i64::MIN;
         }
-        self.counters.comparisons += 1;
+        self.counters.primitives += 1;
         if left <= i && j <= right {
-            self.counters.array_accesses += 1;
+            self.counters.primitives += 1;
             return self.max_tree[node];
         }
         self.push(node, i, j);
