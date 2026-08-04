@@ -134,9 +134,9 @@ def main():
     ops = generate_operations(load, m, n, seed, query_ratio, update_range_ratio)
 
     if load == "mixed":
-        filename = f"input_n{n}_s{seed}_{distribution}_mixed_5050.txt"
+        filename = f"input_n{n}_m{m}_s{seed}_{distribution}_mixed_5050.txt"
     else:
-        filename = f"input_n{n}_s{seed}_{distribution}_{load}.txt"
+        filename = f"input_n{n}_m{m}_s{seed}_{distribution}_{load}.txt"
     filepath = os.path.join(args.output, filename)
 
     os.makedirs(args.output, exist_ok=True)

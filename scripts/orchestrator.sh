@@ -11,10 +11,11 @@ CPP="${BASE_DIR}/segtree_cpp/build/segtree_cpp"
 JAVA="java -jar ${BASE_DIR}/segtree_java/target/segtree.jar"
 PYTHON="python3 ${BASE_DIR}/segtree_python/main.py"
 
-SIZES="${1:-100 1000 10000 100000 1000000}"
-DISTRIBUTIONS="${2:-random sorted nearly_sorted}"
-WARMUP="${3:-1}"
-REPETITIONS="${4:-3}"
+SIZES="${1:-1000 10000 100000 1000000}"
+DISTRIBUTIONS="${2:-random sorted nearly_sorted duplicates all_equal}"
+MULS="${3:-1 5 10}"
+WARMUP="${4:-1}"
+REPETITIONS="${5:-30}"
 
 mkdir -p "$DATA_DIR" "$RESULTS_DIR"
 
@@ -24,50 +25,66 @@ echo "language,n,m,load,input_file,ops_executed,op,time_ns,nodes_visited" \
 echo "Gerando arquivos de entrada..."
 for n in $SIZES; do
     for dist in $DISTRIBUTIONS; do
-        python3 "${BASE_DIR}/scripts/gen_input.py" --n "$n" --seed 42 \
-            --distribution "$dist" --load query --output "${DATA_DIR}/"
+        for mul in $MULS; do
+            m=$((n * mul))
+            python3 "${BASE_DIR}/scripts/gen_input.py" --n "$n" --m "$m" --seed 42 \
+                --distribution "$dist" --load query --output "${DATA_DIR}/"
 
-        python3 "${BASE_DIR}/scripts/gen_input.py" --n "$n" --seed 42 \
-            --distribution "$dist" --load update --output "${DATA_DIR}/"
+            python3 "${BASE_DIR}/scripts/gen_input.py" --n "$n" --m "$m" --seed 42 \
+                --distribution "$dist" --load update --output "${DATA_DIR}/"
 
-        python3 "${BASE_DIR}/scripts/gen_input.py" --n "$n" --seed 42 \
-            --distribution "$dist" --load mixed \
-            --query-ratio 0.5 --update-range-ratio 0.25 \
-            --output "${DATA_DIR}/"
+            python3 "${BASE_DIR}/scripts/gen_input.py" --n "$n" --m "$m" --seed 42 \
+                --distribution "$dist" --load mixed \
+                --query-ratio 0.5 --update-range-ratio 0.25 \
+                --output "${DATA_DIR}/"
 
-        echo "  Gerado: n=${n} dist=${dist} (query/update/mixed_5050)"
+            echo "  Gerado: n=${n} m=${m} dist=${dist} (query/update/mixed_5050)"
+        done
     done
 done
 
 echo "Rodando benchmarks..."
+
+declare -A BINS
 for lang in rust cpp java python; do
+    case "$lang" in
+        rust)   path="$RUST" ;;
+        cpp)    path="$CPP" ;;
+        java)   path="$JAVA" ;;
+        python) path="$PYTHON" ;;
+    esac
+    if [ -x "$path" ] || ([ "$lang" = "java" ] && [ -f "${path#java -jar }" ]) || ([ "$lang" = "python" ] && command -v python3 &>/dev/null); then
+        BINS[$lang]="$path"
+    else
+        echo "AVISO: binário não encontrado para $lang ($path), pulando" >&2
+    fi
+done
+
+for lang in "${!BINS[@]}"; do
+    bin="${BINS[$lang]}"
     echo "=== $lang ==="
     for n in $SIZES; do
         for dist in $DISTRIBUTIONS; do
-            for load in query update mixed; do
-                if [ "$load" = "mixed" ]; then
-                    input="${DATA_DIR}/input_n${n}_s42_${dist}_mixed_5050.txt"
-                else
-                    input="${DATA_DIR}/input_n${n}_s42_${dist}_${load}.txt"
-                fi
+            for mul in $MULS; do
+                m=$((n * mul))
+                for load in query update mixed; do
+                    if [ "$load" = "mixed" ]; then
+                        input="${DATA_DIR}/input_n${n}_m${m}_s42_${dist}_mixed_5050.txt"
+                    else
+                        input="${DATA_DIR}/input_n${n}_m${m}_s42_${dist}_${load}.txt"
+                    fi
 
-                if [ ! -f "$input" ]; then
-                    echo "  AVISO: arquivo não encontrado, pulando: $input" >&2
-                    continue
-                fi
+                    if [ ! -f "$input" ]; then
+                        echo "  AVISO: arquivo não encontrado, pulando: $input" >&2
+                        continue
+                    fi
 
-                case "$lang" in
-                    rust)   bin="$RUST" ;;
-                    cpp)    bin="$CPP" ;;
-                    java)   bin="$JAVA" ;;
-                    python) bin="$PYTHON" ;;
-                esac
+                    $bin --input "$input" --load "$load" \
+                        --warmup "$WARMUP" --repetitions "$REPETITIONS" \
+                        >> "${RESULTS_DIR}/results.csv"
 
-                $bin --input "$input" --load "$load" \
-                    --warmup "$WARMUP" --repetitions "$REPETITIONS" \
-                    >> "${RESULTS_DIR}/results.csv"
-
-                echo "  OK: $lang $(basename "$input") $load"
+                    echo "  OK: $lang $(basename "$input") $load"
+                done
             done
         done
     done
