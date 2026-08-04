@@ -123,8 +123,6 @@ fn main() {
     let load_ops = load_operations(&load_arg, &all_ops);
     let ops_executed = load_ops.len();
 
-    println!("language,n,m,load,input_file,ops_executed,op,time_ns,nodes_visited");
-
     for _ in 0..warmup {
         let mut segtree = SegmentTree::build(&values);
         for op in &load_ops {
