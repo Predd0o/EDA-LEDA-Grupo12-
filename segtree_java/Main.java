@@ -11,6 +11,11 @@ import java.util.StringTokenizer;
  * acordo com {@code --load}, executa (opcionalmente) um aquecimento e mede o
  * tempo e a quantidade de "primitivas" (nós visitados) de cada operação,
  * imprimindo os resultados em CSV no formato esperado pelo orquestrador.
+<<<<<<< HEAD
+=======
+ *
+ * <p>
+>>>>>>> c0ff847 (feat(java): add benchmark main and node-visit counter to segment tree)
  */
 public class Main {
 

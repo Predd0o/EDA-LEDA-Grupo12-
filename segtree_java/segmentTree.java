@@ -1,4 +1,3 @@
-
 public class segmentTree {
 
     /** Quantidade de elementos do array original. */
@@ -18,6 +17,14 @@ public class segmentTree {
      * cada nó.
      */
     private final long[] lazy;
+
+    /**
+     * Contador de "primitivas": quantidade de nós visitados pelas operações
+     * recursivas (build, update e query) desde a última chamada a
+     * {@link #resetCounter()}. Usado para medir o custo estrutural de cada
+     * operação, independente do tempo de parede.
+     */
+    private long counter;
 
     /**
      * Constrói a Segment Tree a partir de um array de inteiros. Complexidade O(n).
@@ -45,6 +52,7 @@ public class segmentTree {
      * @param end   fim (inclusive) do intervalo coberto por este nó
      */
     private void build(int[] arr, int node, int start, int end) {
+        counter++;
         if (start == end) {
             treeSum[node] = arr[start];
             treeMin[node] = arr[start];
@@ -137,6 +145,7 @@ public class segmentTree {
      * @param val   novo valor do elemento
      */
     private void updatePoint(int node, int start, int end, int idx, long val) {
+        counter++;
         if (start == end) {
             treeSum[node] = val;
             treeMin[node] = val;
@@ -179,6 +188,7 @@ public class segmentTree {
      * @param val   valor a ser somado a cada elemento de {@code [l, r]}
      */
     private void updateRange(int node, int start, int end, int l, int r, long val) {
+        counter++;
         if (r < start || end < l)
             return;
         if (l <= start && end <= r) {
@@ -218,6 +228,7 @@ public class segmentTree {
      *         {@code node}
      */
     private long querySum(int node, int start, int end, int l, int r) {
+        counter++;
         if (r < start || end < l)
             return 0;
         if (l <= start && end <= r)
@@ -252,6 +263,7 @@ public class segmentTree {
      *         de {@code node}
      */
     private long queryMin(int node, int start, int end, int l, int r) {
+        counter++;
         if (r < start || end < l)
             return Long.MAX_VALUE;
         if (l <= start && end <= r)
@@ -286,13 +298,14 @@ public class segmentTree {
      *         de {@code node}
      */
     private long queryMax(int node, int start, int end, int l, int r) {
+        counter++;
         if (r < start || end < l)
             return Long.MIN_VALUE;
         if (l <= start && end <= r)
             return treeMax[node];
         push(node, start, end);
         int mid = (start + end) / 2;
-        return Math.max(queryMax(2 * node, start, mid, l, r), queryMax(node * 2 + 1, mid + 1, end, l, r));
+        return Math.max(queryMax(2 * node, start, mid, l, r), queryMax(2 * node + 1, mid + 1, end, l, r));
     }
 
     /**
@@ -310,6 +323,24 @@ public class segmentTree {
     public long queryPoint(int idx) {
         validateIndex(idx);
         return querySum(idx, idx);
+    }
+
+    /**
+     * Retorna a quantidade de nós visitados pelas operações recursivas (build,
+     * update e query) desde a última chamada a {@link #resetCounter()}.
+     *
+     * @return valor atual do contador de primitivas
+     */
+    public long getCounter() {
+        return counter;
+    }
+
+    /**
+     * Zera o contador de primitivas, permitindo medir isoladamente o custo
+     * estrutural de uma única operação subsequente.
+     */
+    public void resetCounter() {
+        counter = 0;
     }
 
     /**
