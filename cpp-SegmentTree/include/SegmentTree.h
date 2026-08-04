@@ -150,9 +150,8 @@ struct Counters {
      * @param right Limite direito.
      * @param value Valor a ser adicionado.
      */
-    void updateRange(int node, int start,
-                     int left, int right,
-                     long long value);
+    void updateRange(int node, int start, int end,
+                     int left, int right, long long value);
     
     /**
      * @brief Consulta a soma de um intervalo.
