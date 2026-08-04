@@ -244,9 +244,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::cout
-        << "language,n,m,load,input_file,ops_executed,op,time_ns,primitives\n";
-
     for (int i = 0; i < warmup; i++) {
 
         SegmentTree segmentTree(data.values);
