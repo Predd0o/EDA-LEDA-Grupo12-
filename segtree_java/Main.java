@@ -92,8 +92,6 @@ public class Main {
         List<Op> loadOps = loadOperations(loadArg, parsed.ops);
         int opsExecuted = loadOps.size();
 
-        System.out.println("language,n,m,load,input_file,ops_executed,op,time_ns,primitives");
-
         // Aquecimento: executa sem medir, para "esquentar" a JIT.
         for (int w = 0; w < warmup; w++) {
             segmentTree tree = new segmentTree(parsed.values);
