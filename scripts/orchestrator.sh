@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+shopt -s nullglob
 
 BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 DATA_DIR="${BASE_DIR}/data"
@@ -14,7 +16,7 @@ DISTRIBUTIONS="${2:-random sorted nearly_sorted}"
 WARMUP="${3:-1}"
 REPETITIONS="${4:-3}"
 
-mkdir -p "$RESULTS_DIR"
+mkdir -p "$DATA_DIR" "$RESULTS_DIR"
 
 echo "language,n,m,load,input_file,ops_executed,op,time_ns,nodes_visited" \
     > "${RESULTS_DIR}/results.csv"
