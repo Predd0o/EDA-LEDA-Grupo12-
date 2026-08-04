@@ -206,7 +206,7 @@ public class Main {
      * primeira linha contém {@code N} e {@code M}, a segunda contém os {@code N}
      * valores do array e as linhas seguintes descrevem as operações. Cada linha
      * {@code query l r} expande em três operações ({@code query_sum},
-     * {@code query_min} e {@code query_max}), igual às versões Python e Rust.
+     * {@code query_min} e {@code query_max})
      *
      * @param path caminho do arquivo de entrada
      * @return dados de entrada já interpretados
