@@ -1,19 +1,18 @@
 #!/bin/bash
 
-BASE_DIR="$(dirname "$0")/.."
+BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 DATA_DIR="${BASE_DIR}/data"
 RESULTS_DIR="${BASE_DIR}/results"
 
-RUST="./segtree_rust/target/release/segtree_rust"
-CPP="./segtree_cpp/build/segtree_cpp"
-JAVA="java -jar ./segtree_java/target/segtree.jar"
-PYTHON="python3 ./segtree_python/main.py"
+RUST="${BASE_DIR}/segtree_rust/target/release/segtree_rust"
+CPP="${BASE_DIR}/segtree_cpp/build/segtree_cpp"
+JAVA="java -jar ${BASE_DIR}/segtree_java/target/segtree.jar"
+PYTHON="python3 ${BASE_DIR}/segtree_python/main.py"
 
 SIZES="${1:-100 1000 10000 100000 1000000}"
 DISTRIBUTIONS="${2:-random sorted nearly_sorted}"
-QUERY_RATIOS="${3:-0.5 0.7 0.9}"
-WARMUP="${4:-1}"
-REPETITIONS="${5:-3}"
+WARMUP="${3:-1}"
+REPETITIONS="${4:-3}"
 
 mkdir -p "$RESULTS_DIR"
 
@@ -23,37 +22,51 @@ echo "language,n,m,load,input_file,ops_executed,op,time_ns,nodes_visited" \
 echo "Gerando arquivos de entrada..."
 for n in $SIZES; do
     for dist in $DISTRIBUTIONS; do
-        for qr in $QUERY_RATIOS; do
-            python3 scripts/gen_input.py --n "$n" --seed 42 \
-                --distribution "$dist" --query-ratio "$qr" \
-                --output "${DATA_DIR}/"
-        done
+        python3 "${BASE_DIR}/scripts/gen_input.py" --n "$n" --seed 42 \
+            --distribution "$dist" --load query --output "${DATA_DIR}/"
+
+        python3 "${BASE_DIR}/scripts/gen_input.py" --n "$n" --seed 42 \
+            --distribution "$dist" --load update --output "${DATA_DIR}/"
+
+        python3 "${BASE_DIR}/scripts/gen_input.py" --n "$n" --seed 42 \
+            --distribution "$dist" --load mixed \
+            --query-ratio 0.5 --update-range-ratio 0.25 \
+            --output "${DATA_DIR}/"
+
+        echo "  Gerado: n=${n} dist=${dist} (query/update/mixed_5050)"
     done
 done
 
 echo "Rodando benchmarks..."
 for lang in rust cpp java python; do
     echo "=== $lang ==="
-    for input in "${DATA_DIR}"/input_n*.txt; do
-        for load in query update mixed; do
-            if [ "$lang" = "rust" ]; then
-                "$RUST" --input "$input" --load "$load" \
+    for n in $SIZES; do
+        for dist in $DISTRIBUTIONS; do
+            for load in query update mixed; do
+                if [ "$load" = "mixed" ]; then
+                    input="${DATA_DIR}/input_n${n}_s42_${dist}_mixed_5050.txt"
+                else
+                    input="${DATA_DIR}/input_n${n}_s42_${dist}_${load}.txt"
+                fi
+
+                if [ ! -f "$input" ]; then
+                    echo "  AVISO: arquivo não encontrado, pulando: $input" >&2
+                    continue
+                fi
+
+                case "$lang" in
+                    rust)   bin="$RUST" ;;
+                    cpp)    bin="$CPP" ;;
+                    java)   bin="$JAVA" ;;
+                    python) bin="$PYTHON" ;;
+                esac
+
+                $bin --input "$input" --load "$load" \
                     --warmup "$WARMUP" --repetitions "$REPETITIONS" \
                     >> "${RESULTS_DIR}/results.csv"
-            elif [ "$lang" = "cpp" ]; then
-                "$CPP" --input "$input" --load "$load" \
-                    --warmup "$WARMUP" --repetitions "$REPETITIONS" \
-                    >> "${RESULTS_DIR}/results.csv"
-            elif [ "$lang" = "java" ]; then
-                $JAVA --input "$input" --load "$load" \
-                    --warmup "$WARMUP" --repetitions "$REPETITIONS" \
-                    >> "${RESULTS_DIR}/results.csv"
-            elif [ "$lang" = "python" ]; then
-                "$PYTHON" --input "$input" --load "$load" \
-                    --warmup "$WARMUP" --repetitions "$REPETITIONS" \
-                    >> "${RESULTS_DIR}/results.csv"
-            fi
-            echo "  OK: $lang $(basename "$input") $load"
+
+                echo "  OK: $lang $(basename "$input") $load"
+            done
         done
     done
 done
