@@ -11,10 +11,6 @@ import java.util.StringTokenizer;
  * acordo com {@code --load}, executa (opcionalmente) um aquecimento e mede o
  * tempo e a quantidade de "primitivas" (nós visitados) de cada operação,
  * imprimindo os resultados em CSV no formato esperado pelo orquestrador.
- *
- * <p>
- * Espelha a estrutura de {@code main.py} (Python) e {@code main.rs} (Rust),
- * usados nas outras linguagens do experimento.
  */
 public class Main {
 
