@@ -3,19 +3,19 @@
 
 use std::cmp::{max, min};
 
-/// Contadores de instrumentação de operações primitivas.
+/// Contadores de instrumentação de nós visitados na árvore.
 #[derive(Debug, Clone)]
 pub struct Counters {
-    pub primitives: u64,
+    pub nodes_visited: u64,
 }
 
 impl Counters {
     fn new() -> Self {
-        Counters { primitives: 0 }
+        Counters { nodes_visited: 0 }
     }
 
     fn reset(&mut self) {
-        self.primitives = 0;
+        self.nodes_visited = 0;
     }
 }
 
@@ -68,21 +68,11 @@ impl SegmentTree {
     }
 
     fn build_helper(&mut self, node: usize, i: usize, j: usize, arr: &[i64]) {
-        self.counters.primitives += 1;
+        self.counters.nodes_visited += 1;
         if i == j {
-            self.counters.primitives += 1;
             self.sum_tree[node] = arr[i];
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
             self.min_tree[node] = arr[i];
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
             self.max_tree[node] = arr[i];
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
             return;
         }
         let mid = (i + j) / 2;
@@ -96,62 +86,35 @@ impl SegmentTree {
     fn pull(&mut self, node: usize) {
         let left_child = 2 * node;
         let right_child = 2 * node + 1;
-        self.counters.primitives += 1;
         let left_sum = self.sum_tree[left_child];
-        self.counters.primitives += 1;
         let right_sum = self.sum_tree[right_child];
-        self.counters.primitives += 1;
         self.sum_tree[node] = left_sum + right_sum;
-        self.counters.primitives += 1;
-        self.counters.primitives += 1;
-        self.counters.primitives += 1;
+
         let left_min = self.min_tree[left_child];
-        self.counters.primitives += 1;
         let right_min = self.min_tree[right_child];
-        self.counters.primitives += 1;
-        self.counters.primitives += 1;
         self.min_tree[node] = min(left_min, right_min);
-        self.counters.primitives += 1;
-        self.counters.primitives += 1;
-        self.counters.primitives += 1;
+
         let left_max = self.max_tree[left_child];
-        self.counters.primitives += 1;
         let right_max = self.max_tree[right_child];
-        self.counters.primitives += 1;
-        self.counters.primitives += 1;
         self.max_tree[node] = max(left_max, right_max);
-        self.counters.primitives += 1;
     }
 
     fn push(&mut self, node: usize, i: usize, j: usize) {
-        self.counters.primitives += 1;
         if self.lazy[node] != 0 {
-            self.counters.primitives += 1;
             let mid = (i + j) / 2;
             self.apply_lazy(2 * node, i, mid, self.lazy[node]);
-            self.counters.primitives += 1;
             self.apply_lazy(2 * node + 1, mid + 1, j, self.lazy[node]);
-            self.counters.primitives += 1;
             self.lazy[node] = 0;
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
         }
     }
 
     fn apply_lazy(&mut self, node: usize, start: usize, end: usize, value: i64) {
+        self.counters.nodes_visited += 1;
         let range_size = (end - start + 1) as i64;
-        self.counters.primitives += 1;
         self.sum_tree[node] += value * range_size;
-        self.counters.primitives += 1;
-        self.counters.primitives += 1;
         self.min_tree[node] += value;
-        self.counters.primitives += 1;
-        self.counters.primitives += 1;
         self.max_tree[node] += value;
-        self.counters.primitives += 1;
-        self.counters.primitives += 1;
         self.lazy[node] += value;
-        self.counters.primitives += 1;
     }
 
     /// Adiciona `value` a todos os elementos no intervalo `[left, right]`.
@@ -179,11 +142,10 @@ impl SegmentTree {
         right: usize,
         value: i64,
     ) {
-        self.counters.primitives += 1;
+        self.counters.nodes_visited += 1;
         if right < i || j < left {
             return;
         }
-        self.counters.primitives += 1;
         if left <= i && j <= right {
             self.apply_lazy(node, i, j, value);
             return;
@@ -218,26 +180,15 @@ impl SegmentTree {
         index: usize,
         value: i64,
     ) {
-        self.counters.primitives += 1;
+        self.counters.nodes_visited += 1;
         if i == j {
-            self.counters.primitives += 1;
             self.sum_tree[node] = value;
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
             self.min_tree[node] = value;
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
             self.max_tree[node] = value;
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
-            self.counters.primitives += 1;
             return;
         }
         self.push(node, i, j);
         let mid = (i + j) / 2;
-        self.counters.primitives += 1;
         if index <= mid {
             self.update_point_helper(2 * node, i, mid, index, value);
         } else {
@@ -272,13 +223,11 @@ impl SegmentTree {
         left: usize,
         right: usize,
     ) -> i64 {
-        self.counters.primitives += 1;
+        self.counters.nodes_visited += 1;
         if right < i || j < left {
             return 0;
         }
-        self.counters.primitives += 1;
         if left <= i && j <= right {
-            self.counters.primitives += 1;
             return self.sum_tree[node];
         }
         self.push(node, i, j);
@@ -314,13 +263,11 @@ impl SegmentTree {
         left: usize,
         right: usize,
     ) -> i64 {
-        self.counters.primitives += 1;
+        self.counters.nodes_visited += 1;
         if right < i || j < left {
             return i64::MAX;
         }
-        self.counters.primitives += 1;
         if left <= i && j <= right {
-            self.counters.primitives += 1;
             return self.min_tree[node];
         }
         self.push(node, i, j);
@@ -356,13 +303,11 @@ impl SegmentTree {
         left: usize,
         right: usize,
     ) -> i64 {
-        self.counters.primitives += 1;
+        self.counters.nodes_visited += 1;
         if right < i || j < left {
             return i64::MIN;
         }
-        self.counters.primitives += 1;
         if left <= i && j <= right {
-            self.counters.primitives += 1;
             return self.max_tree[node];
         }
         self.push(node, i, j);
@@ -381,7 +326,10 @@ mod tests {
     fn build_and_query_sum() {
         let arr: Vec<i64> = (0..16).collect();
         let mut st = SegmentTree::build(&arr);
+        assert_eq!(st.counters().nodes_visited, 31); // 2*16 - 1 = 31
+        st.reset_counters();
         assert_eq!(st.query_sum(0, 15), 120);
+        assert_eq!(st.counters().nodes_visited, 1); // Exact root match = 1 node
         assert_eq!(st.query_sum(1, 9), 45);
     }
 

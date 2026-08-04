@@ -17,7 +17,7 @@ REPETITIONS="${5:-3}"
 
 mkdir -p "$RESULTS_DIR"
 
-echo "language,n,m,load,input_file,ops_executed,op,time_ns,primitives" \
+echo "language,n,m,load,input_file,ops_executed,op,time_ns,nodes_visited" \
     > "${RESULTS_DIR}/results.csv"
 
 echo "Gerando arquivos de entrada..."
