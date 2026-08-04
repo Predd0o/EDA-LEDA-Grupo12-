@@ -24,11 +24,9 @@ echo "Gerando arquivos de entrada..."
 for n in $SIZES; do
     for dist in $DISTRIBUTIONS; do
         for qr in $QUERY_RATIOS; do
-            nome="input_n${n}_s42_${dist}_qr${qr}.txt"
             python3 scripts/gen_input.py --n "$n" --seed 42 \
                 --distribution "$dist" --query-ratio "$qr" \
-                --output "${DATA_DIR}/${nome}"
-            echo "  Gerado: ${nome}"
+                --output "${DATA_DIR}/"
         done
     done
 done
