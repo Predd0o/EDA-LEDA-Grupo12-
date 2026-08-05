@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
 
     std::string inputFile;
     std::string load = "query";
-    int warmup = 1;
+    int warmup = 5;
     int repetitions = 1;
 
     for (int i = 1; i < argc; i++) {

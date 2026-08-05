@@ -8,7 +8,7 @@ RESULTS_DIR="${BASE_DIR}/results"
 
 RUST="${BASE_DIR}/segtree_rust/target/release/segtree_rust"
 CPP="${BASE_DIR}/segtree_cpp/build/segtree_cpp"
-JAVA="java -jar ${BASE_DIR}/segtree_java/target/segtree.jar"
+JAVA="java -cp ${BASE_DIR}/segtree_java Main"
 PYTHON="python3 ${BASE_DIR}/segtree_python/main.py"
 
 SIZES="${1:-1000 10000 100000 1000000}"
@@ -60,8 +60,7 @@ for lang in rust cpp java python; do
             fi
             ;;
         java)
-            jar_path="${JAVA#java -jar }"
-            if [ -f "$jar_path" ]; then
+            if [ -f "${BASE_DIR}/segtree_java/Main.class" ]; then
                 BINS[java]="$JAVA"
             fi
             ;;
