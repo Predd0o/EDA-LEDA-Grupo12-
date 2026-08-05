@@ -14,8 +14,7 @@ PYTHON="python3 ${BASE_DIR}/segtree_python/main.py"
 SIZES="${1:-1000 10000 100000 1000000}"
 DISTRIBUTIONS="${2:-random sorted nearly_sorted duplicates all_equal}"
 MULS="${3:-1 5 10}"
-WARMUP="${4:-1}"
-REPETITIONS="${5:-30}"
+REPETITIONS="${4:-30}"
 
 mkdir -p "$DATA_DIR" "$RESULTS_DIR"
 
@@ -48,15 +47,31 @@ echo "Rodando benchmarks..."
 declare -A BINS
 for lang in rust cpp java python; do
     case "$lang" in
-        rust)   path="$RUST" ;;
-        cpp)    path="$CPP" ;;
-        java)   path="$JAVA" ;;
-        python) path="$PYTHON" ;;
+        rust)
+            if [ -x "$RUST" ]; then
+                BINS[rust]="$RUST"
+            fi
+            ;;
+        cpp)
+            if [ -x "$CPP" ]; then
+                BINS[cpp]="$CPP"
+            fi
+            ;;
+        java)
+            jar_path="${JAVA#java -jar }"
+            if [ -f "$jar_path" ]; then
+                BINS[java]="$JAVA"
+            fi
+            ;;
+        python)
+            py_script="${PYTHON#python3 }"
+            if [ -f "$py_script" ]; then
+                BINS[python]="$PYTHON"
+            fi
+            ;;
     esac
-    if [ -x "$path" ] || ([ "$lang" = "java" ] && [ -f "${path#java -jar }" ]) || ([ "$lang" = "python" ] && command -v python3 &>/dev/null); then
-        BINS[$lang]="$path"
-    else
-        echo "AVISO: binário não encontrado para $lang ($path), pulando" >&2
+    if [ -z "${BINS[$lang]:-}" ]; then
+        echo "AVISO: binário/script não encontrado para $lang, pulando" >&2
     fi
 done
 
@@ -80,7 +95,7 @@ for lang in "${!BINS[@]}"; do
                     fi
 
                     $bin --input "$input" --load "$load" \
-                        --warmup "$WARMUP" --repetitions "$REPETITIONS" \
+                        --repetitions "$REPETITIONS" \
                         >> "${RESULTS_DIR}/results.csv"
 
                     echo "  OK: $lang $(basename "$input") $load"
