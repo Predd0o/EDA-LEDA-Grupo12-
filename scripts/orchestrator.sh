@@ -18,8 +18,10 @@ REPETITIONS="${4:-30}"
 
 mkdir -p "$DATA_DIR" "$RESULTS_DIR"
 
-echo "language,n,m,load,input_file,ops_executed,op,time_ns,nodes_visited" \
-    > "${RESULTS_DIR}/results.csv"
+if [ ! -s "${RESULTS_DIR}/results.csv" ]; then
+    echo "language,n,m,load,input_file,ops_executed,op,time_ns,nodes_visited" \
+        > "${RESULTS_DIR}/results.csv"
+fi
 
 echo "Gerando arquivos de entrada..."
 for n in $SIZES; do
