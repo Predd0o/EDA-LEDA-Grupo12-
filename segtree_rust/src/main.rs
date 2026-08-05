@@ -116,7 +116,7 @@ fn main() {
     let input_path = parse_arg(&args, "--input")
         .expect("required: --input <path>");
     let load_arg = parse_arg(&args, "--load").unwrap_or_else(|| "query".to_string());
-    let warmup: usize = parse_arg_usize(&args, "--warmup", 1);
+    let warmup: usize = parse_arg_usize(&args, "--warmup", 5);
     let repetitions: usize = parse_arg_usize(&args, "--repetitions", 1);
 
     let (n, m, values, all_ops) = parse_input(&input_path);

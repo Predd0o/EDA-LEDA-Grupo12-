@@ -44,7 +44,7 @@ impl SegmentTree {
     /// O(n)
     pub fn build(arr: &[i64]) -> Self {
         let n = arr.len();
-        let size = 4 * n + 1;
+        let size = 4 * n;
         let mut st = SegmentTree {
             n,
             sum_tree: vec![0; size],
@@ -109,7 +109,6 @@ impl SegmentTree {
     }
 
     fn apply_lazy(&mut self, node: usize, start: usize, end: usize, value: i64) {
-        self.counters.nodes_visited += 1;
         let range_size = (end - start + 1) as i64;
         self.sum_tree[node] += value * range_size;
         self.min_tree[node] += value;
