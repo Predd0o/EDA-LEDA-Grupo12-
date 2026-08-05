@@ -43,6 +43,9 @@ impl SegmentTree {
     /// # Complexity
     /// O(n)
     pub fn build(arr: &[i64]) -> Self {
+        if arr.is_empty() {
+            panic!("cannot build a SegmentTree with an empty array");
+        }
         let n = arr.len();
         let size = 4 * n;
         let mut st = SegmentTree {
@@ -53,9 +56,7 @@ impl SegmentTree {
             lazy: vec![0; size],
             counters: Counters::new(),
         };
-        if n > 0 {
-            st.build_helper(1, 0, n - 1, arr);
-        }
+        st.build_helper(1, 0, n - 1, arr);
         st
     }
 
@@ -65,6 +66,32 @@ impl SegmentTree {
 
     pub fn counters(&self) -> &Counters {
         &self.counters
+    }
+
+    /// Valida que `index` é uma posição válida no array original.
+    ///
+    /// # Panics
+    /// Se `index >= self.n`.
+    fn validate_index(&self, index: usize) {
+        if index >= self.n {
+            panic!("index out of bounds: {} (n = {})", index, self.n);
+        }
+    }
+
+    /// Valida que o intervalo `[left, right]` é válido no array original.
+    ///
+    /// # Panics
+    /// Se `right >= self.n` ou `left > right`.
+    fn validate_range(&self, left: usize, right: usize) {
+        if right >= self.n {
+            panic!(
+                "invalid range [{}, {}]: right bound out of bounds (n = {})",
+                left, right, self.n
+            );
+        }
+        if left > right {
+            panic!("invalid range [{}, {}]: left > right", left, right);
+        }
     }
 
     fn build_helper(&mut self, node: usize, i: usize, j: usize, arr: &[i64]) {
@@ -126,9 +153,7 @@ impl SegmentTree {
     /// # Complexity
     /// O(log n)
     pub fn update_range(&mut self, left: usize, right: usize, value: i64) {
-        if self.n == 0 {
-            return;
-        }
+        self.validate_range(left, right);
         self.update_range_helper(1, 0, self.n - 1, left, right, value);
     }
 
@@ -165,9 +190,7 @@ impl SegmentTree {
     /// # Complexity
     /// O(log n)
     pub fn update_point(&mut self, index: usize, value: i64) {
-        if self.n == 0 {
-            return;
-        }
+        self.validate_index(index);
         self.update_point_helper(1, 0, self.n - 1, index, value);
     }
 
@@ -208,9 +231,7 @@ impl SegmentTree {
     /// # Complexity
     /// O(log n)
     pub fn query_sum(&mut self, left: usize, right: usize) -> i64 {
-        if self.n == 0 || right < left {
-            return 0;
-        }
+        self.validate_range(left, right);
         self.query_sum_helper(1, 0, self.n - 1, left, right)
     }
 
@@ -248,9 +269,7 @@ impl SegmentTree {
     /// # Complexity
     /// O(log n)
     pub fn query_min(&mut self, left: usize, right: usize) -> i64 {
-        if self.n == 0 || right < left {
-            return i64::MAX;
-        }
+        self.validate_range(left, right);
         self.query_min_helper(1, 0, self.n - 1, left, right)
     }
 
@@ -288,9 +307,7 @@ impl SegmentTree {
     /// # Complexity
     /// O(log n)
     pub fn query_max(&mut self, left: usize, right: usize) -> i64 {
-        if self.n == 0 || right < left {
-            return i64::MIN;
-        }
+        self.validate_range(left, right);
         self.query_max_helper(1, 0, self.n - 1, left, right)
     }
 
@@ -366,9 +383,33 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
     fn empty_tree() {
         let arr: Vec<i64> = vec![];
+        let _st = SegmentTree::build(&arr);
+    }
+
+    #[test]
+    #[should_panic]
+    fn invalid_index_panics() {
+        let arr: Vec<i64> = (0..10).collect();
         let mut st = SegmentTree::build(&arr);
-        assert_eq!(st.query_sum(0, 0), 0);
+        st.update_point(10, 1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn invalid_range_panics() {
+        let arr: Vec<i64> = (0..10).collect();
+        let mut st = SegmentTree::build(&arr);
+        st.query_sum(8, 3);
+    }
+
+    #[test]
+    #[should_panic]
+    fn out_of_bounds_range_panics() {
+        let arr: Vec<i64> = (0..10).collect();
+        let mut st = SegmentTree::build(&arr);
+        st.update_range(5, 10, 1);
     }
 }
