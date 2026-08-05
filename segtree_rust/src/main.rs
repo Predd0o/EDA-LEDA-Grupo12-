@@ -113,17 +113,18 @@ fn emit(
 fn main() {
     let args = std::env::args().collect::<Vec<_>>();
 
+    const WARMUP: usize = 5;
+
     let input_path = parse_arg(&args, "--input")
         .expect("required: --input <path>");
     let load_arg = parse_arg(&args, "--load").unwrap_or_else(|| "query".to_string());
-    let warmup: usize = parse_arg_usize(&args, "--warmup", 5);
     let repetitions: usize = parse_arg_usize(&args, "--repetitions", 1);
 
     let (n, m, values, all_ops) = parse_input(&input_path);
     let load_ops = load_operations(&load_arg, &all_ops);
     let ops_executed = load_ops.len();
 
-    for _ in 0..warmup {
+    for _ in 0..WARMUP {
         let mut segtree = SegmentTree::build(&values);
         for op in &load_ops {
             match op {
