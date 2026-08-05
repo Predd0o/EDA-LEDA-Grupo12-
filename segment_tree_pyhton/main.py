@@ -101,7 +101,6 @@ def main():
     parser = argparse.ArgumentParser(description="Main da Segment Tree em Python")
     parser.add_argument("--input", type=str, required=True, help="Caminho do arquivo de entrada")
     parser.add_argument("--load", type=str, default="query", help="Tipo de carga (query, update, mixed)")
-    parser.add_argument("--warmup", type=int, default=1, help="Repetições de aquecimento")
     parser.add_argument("--repetitions", type=int, default=1, help="Repetições cronometradas")
 
     args = parser.parse_args()
@@ -110,11 +109,8 @@ def main():
     load_ops = load_operations(args.load, all_ops)
     ops_executed = len(load_ops)
 
-    # Imprime o cabeçalho do CSV
-    print("language,n,m,load,input_file,ops_executed,op,time_ns,primitives")
-
-    # Aquecimento (Warmup): Executa para esquentar o interpretador sem medir o tempo
-    for _ in range(args.warmup):
+    # Aquecimento (Warmup): Executa 5 vezes para esquentar o interpretador sem medir o tempo
+    for _ in range(5):
         segtree = SegmentTree(values)
         for op in load_ops:
             if isinstance(op, QuerySum):
