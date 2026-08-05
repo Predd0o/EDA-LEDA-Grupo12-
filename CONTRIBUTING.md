@@ -103,12 +103,12 @@ Todo PR deve passar por revisão de pelo menos um outro integrante antes do merg
 | Prefixo | Tipo | Localização | Exemplo |
 |---|---|---|---|
 | `gen_` | Script de geração de entradas | `scripts/` | `gen_input.py` |
-| `orchestrator` | Script de orquestração dos experimentos | `scripts/` | `orchestrator.py` |
+| `orchestrator` | Script de orquestração dos experimentos | `scripts/` | `orchestrator.sh` |
 | `analyze_` | Script de análise/geração de gráficos | `scripts/` | `analyze_results.py` |
-| `result_` | Resultado bruto de um experimento | `data/` | `result_rust_n1e6_query.csv` |
+| `results.csv` | Resultado bruto agregado de um batch de experimentos | `results/` | `results.csv` |
 | `Dockerfile` | Ambiente isolado para execução dos benchmarks | `setup/` | `Dockerfile` |
 
-O nome do arquivo `result_` deve incluir linguagem, tamanho da entrada e tipo de carga, para facilitar rastreabilidade nos scripts de análise.
+O `orchestrator.sh` grava uma linha por execução (linguagem, N, M, carga, operação, tempo e nós visitados) em `results/results.csv`, consumido pelos scripts de análise.
 
 ---
 
@@ -122,8 +122,8 @@ EDA-LEDA-Grupo12-/
 ├── segtree_python/       # implementação em Python
 ├── scripts/              # geração de entradas, orquestração, análise
 ├── setup/                # Dockerfile e instruções de ambiente
-├── data/                 # entradas geradas e resultados brutos (CSV)
-├── results/              # gráficos e relatório final
+├── data/                 # entradas geradas (CSV)
+├── results/              # resultados brutos (CSV), gráficos e relatório final
 └── README.md             # metodologia, resultados e conclusões
 ```
 
@@ -132,8 +132,8 @@ EDA-LEDA-Grupo12-/
 | `segtree_<linguagem>/` | Implementação da estrutura de dados em cada linguagem |
 | `scripts/` | Geração de entradas, orquestração dos experimentos, geração de gráficos |
 | `setup/` | Dockerfile e instruções do ambiente isolado |
-| `data/` | Entradas geradas e resultados brutos (CSV) |
-| `results/` | Gráficos e relatório final |
+| `data/` | Entradas geradas (CSV) |
+| `results/` | Resultados brutos (CSV), gráficos e relatório final |
 
 ---
 
@@ -181,7 +181,7 @@ O membro responsável executa a bateria de testes de performance em ambiente Doc
 
 **Cuidados obrigatórios (ver seção de metodologia do relatório):**
 
-- Warm-up antes de medir Java (evitar viés do JIT)
+- Warm-up antes das medições em todas as linguagens (5 execuções de aquecimento)
 - Nenhum outro processo pesado competindo por CPU durante a execução
 - Mesmas entradas (mesma seed) para todas as linguagens em cada configuração
 
@@ -192,7 +192,7 @@ git checkout Main
 git checkout -b script/run-experiments-<config>
 
 # Executar via orquestrador dentro do Docker
-bash scripts/orchestrator.py --config <config>
+bash scripts/orchestrator.sh
 
 # Commitar scripts e resultado CSV
 git add scripts/ data/
@@ -204,7 +204,7 @@ git push origin script/run-experiments-<config>
 
 **Critérios de validade estatística:**
 
-- Cada configuração (linguagem × N × M × tipo de carga) executada de **5 a 10 vezes**, reportando média, mediana e desvio padrão
+- Cada configuração (linguagem × N × M × tipo de carga) executada **30 vezes** (com 5 execuções de warm-up), reportando média, mediana e desvio padrão
 - Resultados salvos incrementalmente para evitar perda de dados em caso de interrupção
 
 ---
