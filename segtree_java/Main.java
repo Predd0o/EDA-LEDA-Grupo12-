@@ -111,7 +111,7 @@ public class Main {
             }
             long totalElapsed = System.nanoTime() - totalStart;
             long totalPrimitives = tree.getCounter();
-            emit("java", parsed.n, parsed.m, loadArg, inputPath, opsExecuted, "all", totalElapsed,
+            emit("java", parsed.n, parsed.m, loadArg, inputPath, opsExecuted, "batch_ops", totalElapsed,
                     totalPrimitives);
         }
     }
