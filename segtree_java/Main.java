@@ -215,7 +215,7 @@ public class Main {
                 }
                 String opType = tok.nextToken();
                 switch (opType) {
-                    case "Q": {
+                    case "query": {
                         int l = Integer.parseInt(tok.nextToken());
                         int r = Integer.parseInt(tok.nextToken());
                         ops.add(Op.querySum(l, r));
@@ -223,7 +223,7 @@ public class Main {
                         ops.add(Op.queryMax(l, r));
                         break;
                     }
-                    case "U": {
+                    case "update_range": {
                         int l = Integer.parseInt(tok.nextToken());
                         int r = Integer.parseInt(tok.nextToken());
                         long value = Long.parseLong(tok.nextToken());
