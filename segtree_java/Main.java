@@ -144,30 +144,6 @@ public class Main {
     }
 
     /**
-     * Converte o tipo interno da operação no nome usado na coluna {@code op} do
-     * CSV, no mesmo formato usado pelas versões Python e Rust.
-     *
-     * @param type tipo da operação
-     * @return nome da operação em snake_case
-     */
-    private static String opName(OpType type) {
-        switch (type) {
-            case QUERY_SUM:
-                return "query_sum";
-            case QUERY_MIN:
-                return "query_min";
-            case QUERY_MAX:
-                return "query_max";
-            case UPDATE_RANGE:
-                return "update_range";
-            case UPDATE_POINT:
-                return "update_point";
-            default:
-                throw new IllegalStateException("Tipo de operação desconhecido: " + type);
-        }
-    }
-
-    /**
      * Filtra a lista completa de operações de acordo com o tipo de carga
      * solicitado.
      *
