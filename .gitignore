@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 .obsidian/
 projeto_eda/
+data/

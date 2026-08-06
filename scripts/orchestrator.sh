@@ -11,9 +11,9 @@ CPP="${BASE_DIR}/segtree_cpp/build/segtree_cpp"
 JAVA="java -cp ${BASE_DIR}/segtree_java Main"
 PYTHON="python3 ${BASE_DIR}/segtree_python/main.py"
 
-SIZES="${1:-1000 10000 100000 1000000}"
+SIZES="${1:-100 1000 10000 100000}"
 DISTRIBUTIONS="${2:-random sorted nearly_sorted duplicates all_equal}"
-MULS="${3:-1 5 10}"
+MULS="${3:-1 5}"
 REPETITIONS="${4:-30}"
 
 mkdir -p "$DATA_DIR" "$RESULTS_DIR"

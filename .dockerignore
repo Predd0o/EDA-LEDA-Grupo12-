@@ -4,6 +4,7 @@ segtree_rust/target/
 segtree_cpp/build/
 segtree_java/*.class
 .obsidian/
+data/
 *.swp
 *.swo
 *~
