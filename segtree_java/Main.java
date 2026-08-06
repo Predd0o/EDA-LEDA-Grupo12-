@@ -104,14 +104,15 @@ public class Main {
 
             emit("java", parsed.n, parsed.m, loadArg, inputPath, opsExecuted, "build", buildTime, buildPrimitives);
 
+            tree.resetCounter();
+            long totalStart = System.nanoTime();
             for (Op op : loadOps) {
-                tree.resetCounter();
-                long start = System.nanoTime();
                 execute(tree, op);
-                long elapsed = System.nanoTime() - start;
-                long primitives = tree.getCounter();
-                emit("java", parsed.n, parsed.m, loadArg, inputPath, opsExecuted, opName(op.type), elapsed, primitives);
             }
+            long totalElapsed = System.nanoTime() - totalStart;
+            long totalPrimitives = tree.getCounter();
+            emit("java", parsed.n, parsed.m, loadArg, inputPath, opsExecuted, "all", totalElapsed,
+                    totalPrimitives);
         }
     }
 
