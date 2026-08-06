@@ -1,3 +1,7 @@
 target/
+*.class
+build/
+__pycache__/
+*.pyc
 .obsidian/
 projeto_eda/
