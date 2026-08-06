@@ -76,22 +76,25 @@ for lang in rust cpp java python; do
     fi
 done
 
-for lang in "${!BINS[@]}"; do
-    bin="${BINS[$lang]}"
-    echo "=== $lang ==="
-    for n in $SIZES; do
-        for dist in $DISTRIBUTIONS; do
-            for mul in $MULS; do
-                m=$((n * mul))
-                for load in query update mixed; do
-                    if [ "$load" = "mixed" ]; then
-                        input="${DATA_DIR}/input_n${n}_m${m}_s42_${dist}_mixed_5050.txt"
-                    else
-                        input="${DATA_DIR}/input_n${n}_m${m}_s42_${dist}_${load}.txt"
-                    fi
+for n in $SIZES; do
+    for dist in $DISTRIBUTIONS; do
+        for mul in $MULS; do
+            m=$((n * mul))
+            for load in query update mixed; do
+                if [ "$load" = "mixed" ]; then
+                    input="${DATA_DIR}/input_n${n}_m${m}_s42_${dist}_mixed_5050.txt"
+                else
+                    input="${DATA_DIR}/input_n${n}_m${m}_s42_${dist}_${load}.txt"
+                fi
 
-                    if [ ! -f "$input" ]; then
-                        echo "  AVISO: arquivo não encontrado, pulando: $input" >&2
+                if [ ! -f "$input" ]; then
+                    echo "  AVISO: arquivo não encontrado, pulando: $input" >&2
+                    continue
+                fi
+
+                for lang in rust cpp java python; do
+                    bin="${BINS[$lang]:-}"
+                    if [ -z "$bin" ]; then
                         continue
                     fi
 
