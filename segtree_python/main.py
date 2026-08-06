@@ -137,37 +137,34 @@ def main():
         
         emit("python", n, m, args.load, args.input, ops_executed, "build", build_time, build_primitives)
 
-        # 2. Medindo cada operação da lista
-        for op in load_ops:
-            # Zera o contador ANTES de rodar a operação
-            segtree.reset_counter()
+        # 2. Medindo o tempo e os nós visitados de todas as operações da lista
+
+        # Zera o contador antes de rodar as operações
+        segtree.reset_counter()
             
-            # Dispara cronômetro
-            start = time.perf_counter_ns()
+        # Dispara cronômetro antes do for que percorre todas as operações
+        start = time.perf_counter_ns()
+
+        for op in load_ops:
             
             if isinstance(op, QuerySum):
                 segtree.query_sum(op.l, op.r)
-                op_name = "query_sum"
             elif isinstance(op, QueryMin):
                 segtree.query_min(op.l, op.r)
-                op_name = "query_min"
             elif isinstance(op, QueryMax):
                 segtree.query_max(op.l, op.r)
-                op_name = "query_max"
             elif isinstance(op, UpdateRange):
                 segtree.update_range(op.l, op.r, op.value)
-                op_name = "update_range"
             elif isinstance(op, UpdatePoint):
                 segtree.update_point(op.index, op.value)
-                op_name = "update_point"
                 
-            # Para cronômetro
-            time_spent = time.perf_counter_ns() - start
+        # Para cronômetro após todas as operações
+        time_spent = time.perf_counter_ns() - start
             
-            # Pega quantos nós foram visitados naquela única operação
-            primitives_count = segtree.get_counter()
+        # Pega quantos nós foram visitados em todas as operações
+        primitives_count = segtree.get_counter()
             
-            emit("python", n, m, args.load, args.input, ops_executed, op_name, time_spent, primitives_count)
+        emit("python", n, m, args.load, args.input, ops_executed, "batch_ops", time_spent, primitives_count)
 
 if __name__ == "__main__":
     main()
