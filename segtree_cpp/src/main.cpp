@@ -126,7 +126,7 @@ InputData readInput() {
     }
 
     return data;
-}
+}   
 
 /**
  * @brief Imprime uma linha no formato CSV esperado pelo Orquestrador.
@@ -190,15 +190,15 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    if (inputFile.empty()) {
+        std::cerr << "Erro: Parâmetro obrigatório --input não especificado.\n";
+        return 1;
+    }
+
     std::ifstream file(inputFile);
 
     if (!file.is_open()) {
         std::cerr << "Erro ao abrir arquivo: " << inputFile << '\n';
-        return 1;
-    }
-
-    if (inputFile.empty()) {
-        std::cerr << "Erro: Parâmetro obrigatório --input não especificado.\n";
         return 1;
     }
 
@@ -282,79 +282,17 @@ int main(int argc, char* argv[]) {
     }
 }
 
-for (int i = 0; i < repetitions; i++) {
+    for (int i = 0; i < repetitions; i++) {
 
-    auto buildStart = std::chrono::high_resolution_clock::now();
+        auto buildStart = std::chrono::high_resolution_clock::now();
 
-    SegmentTree segmentTree(data.values);
+        SegmentTree segmentTree(data.values);
 
-    auto buildEnd = std::chrono::high_resolution_clock::now();
+        auto buildEnd = std::chrono::high_resolution_clock::now();
 
-    long long buildTime =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(
-            buildEnd - buildStart
-        ).count();
-
-    emit(
-        "cpp",
-        data.n,
-        data.m,
-        load,
-        inputFile,
-        static_cast<int>(loadOperations.size()),
-        "build",
-        buildTime,
-        segmentTree.getCounters().visitedNodes
-    );
-
-    for (const Operation& operation : loadOperations) {
-
-        segmentTree.resetCounters();
-
-        auto start = std::chrono::high_resolution_clock::now();
-
-        std::string operationName;
-
-        switch (operation.type) {
-
-            case OperationType::QuerySum:
-                segmentTree.querySum(operation.left, operation.right);
-                operationName = "query_sum";
-                break;
-
-            case OperationType::QueryMin:
-                segmentTree.queryMin(operation.left, operation.right);
-                operationName = "query_min";
-                break;
-
-            case OperationType::QueryMax:
-                segmentTree.queryMax(operation.left, operation.right);
-                operationName = "query_max";
-                break;
-
-            case OperationType::UpdateRange:
-                segmentTree.updateRange(
-                    operation.left,
-                    operation.right,
-                    operation.value
-                );
-                operationName = "update_range";
-                break;
-
-            case OperationType::UpdatePoint:
-                segmentTree.updatePoint(
-                    operation.index,
-                    operation.value
-                );
-                operationName = "update_point";
-                break;
-        }
-
-        auto end = std::chrono::high_resolution_clock::now();
-
-        long long elapsedTime =
+        long long buildTime =
             std::chrono::duration_cast<std::chrono::nanoseconds>(
-                end - start
+                buildEnd - buildStart
             ).count();
 
         emit(
@@ -364,11 +302,66 @@ for (int i = 0; i < repetitions; i++) {
             load,
             inputFile,
             static_cast<int>(loadOperations.size()),
-            operationName,
-            elapsedTime,
+            "build",
+            buildTime,
             segmentTree.getCounters().visitedNodes
+        );
+
+        segmentTree.resetCounters();
+
+        auto start = std::chrono::high_resolution_clock::now();
+
+        for (const Operation& operation : loadOperations) {
+
+            switch (operation.type) {
+
+                case OperationType::QuerySum:
+                    segmentTree.querySum(operation.left, operation.right);
+                    break;
+
+                case OperationType::QueryMin:
+                    segmentTree.queryMin(operation.left, operation.right);
+                    break;
+
+                case OperationType::QueryMax:
+                    segmentTree.queryMax(operation.left, operation.right);
+                    break;
+
+                case OperationType::UpdateRange:
+                    segmentTree.updateRange(
+                        operation.left,
+                        operation.right,
+                        operation.value
+                    );
+                    break;
+
+                case OperationType::UpdatePoint:
+                    segmentTree.updatePoint(
+                        operation.index,
+                        operation.value
+                    );
+                    break;
+            }
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+
+        long long elapsedTime =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                end - start
+            ).count();
+
+            emit(
+                "cpp",
+                data.n,
+                data.m,
+                load,
+                inputFile,
+                static_cast<int>(loadOperations.size()),
+                "batch_ops",
+                elapsedTime,
+                segmentTree.getCounters().visitedNodes
             );
         }
-    }
     return 0;
 }
