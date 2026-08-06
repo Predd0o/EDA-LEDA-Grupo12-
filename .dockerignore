@@ -1,6 +1,8 @@
 .git/
 target/
 segtree_rust/target/
+segtree_cpp/build/
+segtree_java/*.class
 .obsidian/
 *.swp
 *.swo
