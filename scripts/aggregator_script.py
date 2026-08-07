@@ -5,8 +5,7 @@ def main():
     # Lê o CSV gerado pelo orquestrador
     df = pd.read_csv("results.csv")
 
-    # (Opcional, mas recomendado) Converter nanosegundos para milissegundos
-    # Isso deixa os números muito mais legíveis para os gráficos
+    #Converte nanosegundos para milissegundos
     df['time_ms'] = df['time_ns'] / 1_000_000.0
 
     print("Calculando médias e desvios padrões...")
