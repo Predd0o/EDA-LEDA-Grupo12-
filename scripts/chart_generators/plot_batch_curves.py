@@ -7,7 +7,7 @@ import os
 def gerar_grafico(df, tipo_carga, multiplicador, pasta_saida):
     """
     Filtra os dados e gera um gráfico 2x2 para a carga e multiplicador especificados,
-    salvando-o na pasta de saída.
+    salvando-o na pasta de saída com eixo Y padronizado para linguagens compiladas.
     """
     df_filtrado = df[
         (df['op'] == 'batch_ops') & 
@@ -17,6 +17,14 @@ def gerar_grafico(df, tipo_carga, multiplicador, pasta_saida):
 
     df_plot = df_filtrado.groupby(['language', 'n', 'm'])['tempo_medio_ms'].mean().reset_index()
     df_plot['tempo_por_op_us'] = (df_plot['tempo_medio_ms'] / df_plot['m']) * 1000
+
+    # Encontra o maior tempo apenas entre as linguagens compiladas
+    df_compiladas = df_plot[df_plot['language'].isin(['cpp', 'rust', 'java'])]
+    if not df_compiladas.empty:
+        max_y_compiladas = df_compiladas['tempo_por_op_us'].max()
+        limite_y = max_y_compiladas * 1.10 # Adiciona 10% de "respiro" no topo do gráfico
+    else:
+        limite_y = None
 
     sns.set_theme(style="whitegrid")
     fig, axes = plt.subplots(2, 2, figsize=(12, 8))
@@ -51,9 +59,13 @@ def gerar_grafico(df, tipo_carga, multiplicador, pasta_saida):
         ax.legend()
         ax.ticklabel_format(style='sci', axis='x', scilimits=(0,0)) 
 
+        if lang in ['cpp', 'rust', 'java'] and limite_y is not None:
+            ax.set_ylim(0, limite_y) # Trava as compiladas na mesma escala
+        else:
+            ax.set_ylim(bottom=0)    # Python fica livre, mas forçado a começar do zero
+
     plt.tight_layout()
     
-    # Monta o caminho completo da imagem apontando para a nova pasta
     nome_arquivo = f"grafico_batch_{tipo_carga}_{multiplicador}N.png"
     caminho_completo = os.path.join(pasta_saida, nome_arquivo)
     
@@ -64,7 +76,6 @@ def gerar_grafico(df, tipo_carga, multiplicador, pasta_saida):
 def main():
     print("Iniciando a geração de gráficos das operações (Batch)...")
     
-    # 1. Define o nome da pasta e a cria se não existir
     pasta_saida = "operation_charts"
     os.makedirs(pasta_saida, exist_ok=True)
     
@@ -78,7 +89,6 @@ def main():
     cargas = ['query', 'update', 'mixed']
     multiplicadores = [1, 5]
     
-    # 2. Passa a variável da pasta_saida para a função
     for mult in multiplicadores:
         for carga in cargas:
             gerar_grafico(df, carga, mult, pasta_saida)
