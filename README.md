@@ -245,14 +245,14 @@ Conforme observado na Tabela 1, o desvio padrão é zero em todos os cenários, 
 
 A operação de construção (build) da árvore é cronometrada separadamente do bloco de operações de carga de trabalho (batch_ops). Após a construção da estrutura, cada operação da carga é executada dentro de um bloco de M operações, cujo tempo total é cronometrado de forma independente. Dessa forma, o custo de construção, que ocorre uma única vez por execução, não é incorporado ao tempo do lote de operações, permitindo analisar separadamente o comportamento de cada linguagem na construção da Segment Tree.
 
-![Tempo de Construção (Build) em Escala Log-Log](results/figura-01-build-tempo-log-log.png)
+![Tempo de Construção (Build) em Escala Log-Log](results/build_charts/build_chart_loglog.png)
 
 **Figura 1** – Tempo de Construção (Build) em Escala Log-Log
 *Fonte: Elaborada pelos autores (2026).*
 
 A Figura 1 apresenta o tempo médio de construção em função do tamanho da entrada N, em escala log-log. Esse tipo de escala é adequado para observar o comportamento assintótico, como a construção da Segment Tree percorre os N elementos do array de entrada para montar a estrutura, espera-se um crescimento de complexidade *O(n)*. Em um gráfico log-log, esse comportamento é representado aproximadamente por uma reta, cuja inclinação está relacionada ao expoente de crescimento. As quatro linguagens apresentam comportamento aproximadamente linear ao longo dos tamanhos avaliados (N = 10² a 10⁵), indicando que as implementações seguem comportamento assintótico esperado, independente da linguagem utilizada. Entretanto, em termos absolutos, as linguagens apresentam diferenças consideráveis. Para N = 100.000, o C++ construiu a árvore em aproximadamente 1,72 ms, o Rust em 2,57 ms e o Java em 3,13 ms, enquanto o Python levou 78,58 ms. Dessa forma, o Python apresentou um tempo de construção, aproximadamente, 46 vezes maior se comparado com o C++ e 25 vezes maior se comparado com o Java. A diferença se torna mais evidente conforme o tamanho da entrada aumenta, como mostra a escala linear da Figura 2.
 
-![Tempo de Construção (Build) por Tamanho do Array](results/figura-02-build-tempo-linear.png)
+![Tempo de Construção (Build) por Tamanho do Array](results/build_charts/build_chart.png)
 
 **Figura 2** - Tempo de Construção (Build) por Tamanho do Array
 *Fonte: Elaborada pelos autores (2026).*
@@ -267,7 +267,7 @@ Assim, embora as quatro implementações apresentem o mesmo comportamento assint
 
 A avaliação do desempenho das operações em lote permite a observação de como a árvore de segmentos se comporta sobre as diferentes cargas de trabalho. A Figura 3 mostra a curva de tempo médio por operação para a carga de trabalho Update no lote de 5N, comparando as quatro linguagens utilizadas no projeto com relação ao limite teórico de complexidade *O(log N)*. Nos gráficos temos o eixo do tempo médio, medido em microssegundos (µs) e o eixo do tamanho do array (N). Outro aspecto relevante é que no eixo X os valores estão postos tendo por base o valor de 10⁵, representado pela notação "1e5", ou seja, o ponto 0.2 representa um tamanho de array igual a 0.2 x 10⁵, por exemplo.
 
-![Curva de Tempo por Operação (Update - Lote de 5N)](results/figura-03-update-lote-5n.png)
+![Curva de Tempo por Operação (Update - Lote de 5N)](results/operation_charts/grafico_batch_update_5N.png)
 
 **Figura 3** - Curva de Tempo por Operação (Update - Lote de 5N)
 *Fonte: Elaborada pelos autores (2026).*
@@ -280,7 +280,7 @@ Na implementação em Java, o desempenho mostrado é próximo de C++ e Rust, com
 
 Em Python, embora acompanhe o padrão de crescimento das outras, a implementação é consideravelmente a mais lenta, alcançando a faixa de tempo de 30µs a mais de 35 µs. Devido à natureza interpretada da linguagem, o que impacta a latência de cada operação, ela se torna significativamente menos eficiente que as outras linguagens para essa estrutura de dados específica.
 
-![Curva de Tempo por Operação (Update - Lote de 1N)](results/figura-04-update-lote-1n.png)
+![Curva de Tempo por Operação (Update - Lote de 1N)](results/operation_charts/grafico_batch_update_1N.png)
 
 **Figura 4** - Curva de Tempo por Operação (Update - Lote de 1N)
 *Fonte: Elaborada pelos autores (2026).*
@@ -289,7 +289,7 @@ De forma similar aos resultados obtidos com carga de maior intensidade, a Figura
 
 Assim, a ordem de desempenho entre as linguagens permanece a mesma. No entanto é importante destacar o comportamento do Java para entradas de menores tamanhos, a curva exibe um trecho quase horizontal inicialmente. Esse fenômeno em escalas reduzidas pode estar associado ao custo de inicialização e ao comportamento do JIT, onde o tempo de execução é pequeno demais para estabilizar o perfil de desempenho. Em outras palavras, isso pode ter ocorrido porque o número de execuções internas, necessárias para finalizar as operações relativas ao N = 100 e ao N = 1000, foi insuficiente para ativar as otimizações realizadas pelo JIT. É válido ressaltar que esse comportamento se repetirá em todos os gráficos de Java quanto às operações em blocos.
 
-![Curva de Tempo por Operação (Query - Lote de 5N)](results/figura-05-query-lote-5n.png)
+![Curva de Tempo por Operação (Query - Lote de 5N)](results/operation_charts/grafico_batch_query_5N.png)
 
 **Figura 5** - Curva de Tempo por Operação (Query - Lote de 5N)
 *Fonte: Elaborada pelos autores (2026).*
@@ -300,14 +300,14 @@ Assim, mantendo uma hierarquia de eficiência entre as linguagens. As linguagens
 
 É observável que os tempos absolutos para as consultas são levemente superiores aos de atualizações, refletindo o fato que as atualizações são otimizadas pelas Lazy Propagation, enquanto as consultas podem necessitar de descidas completas pela árvore.
 
-![Curva de Tempo por Operação (Query - Lote de 1N)](results/figura-06-query-lote-1n.png)
+![Curva de Tempo por Operação (Query - Lote de 1N)](results/operation_charts/grafico_batch_query_1N.png)
 
 **Figura 6** - Curva de Tempo por Operação (Query - Lote de 1N)
 *Fonte: Elaborada pelos autores (2026).*
 
 Igualmente às análises das figuras anteriores, a Figura 6 apresenta o comportamento do tempo médio por operação para a carga de Query com um lote de 1N. Observa-se que as quatro linguagens continuam preservando o comportamento teórico esperado, assim, a redução no volume de operações por execução não altera a eficiência das consultas. Por consequente, a hierarquia, anteriormente citada, permanece inalterada.
 
-![Curva de Tempo por Operação (Mixed - Lote de 5N)](results/figura-07-mixed-lote-5n.png)
+![Curva de Tempo por Operação (Mixed - Lote de 5N)](results/operation_charts/grafico_batch_mixed_5N.png)
 
 **Figura 7** - Curva de Tempo por Operação (Mixed - Lote de 5N)
 *Fonte: Elaborada pelos autores (2026).*
@@ -316,7 +316,7 @@ A Figura 7 nos mostra o comportamento médio por operação para a carga de trab
 
 É importante ressaltar que Python opera nesse gráfico em uma grandeza de tempo consideravelmente superior, atingindo valores próximos a 50 µs para N = 10⁵, demonstrando o custo acumulado de diferentes operações sob a natureza interpretada da linguagem.
 
-![Curva de Tempo por Operação (Mixed - Lote de 1N)](results/figura-08-mixed-lote-1n.png)
+![Curva de Tempo por Operação (Mixed - Lote de 1N)](results/operation_charts/grafico_batch_mixed_1N.png)
 
 **Figura 8** - Curva de Tempo por Operação (Mixed - Lote de 1N)
 *Fonte: Elaborada pelos autores (2026).*
@@ -335,22 +335,22 @@ A distribuição Random apresenta os maiores tempos médios em praticamente toda
 
 Por fim, vale registrar que o Java exibe desvio padrão proporcionalmente maior que C++ e Rust no tempo de construção (em torno de 2,2 ms de desvio sobre uma média de aproximadamente 3 ms, contra desvios de 0,5 ms e 0,08-0,18 ms, respectivamente), visível nas barras de erro mais longas da série laranja na Figura 12. Esse comportamento é esperado mesmo após o período de aquecimento (warm up), sendo atribuído à atuação do coletor de lixo (garbage collector) da JVM, cuja execução pode ser de forma não determinística durante a repetição da medição.
 
-![Comparação de Estabilidade: Atualizações (Update - 5N)](results/figura-09-estabilidade-update.png)
+![Comparação de Estabilidade: Atualizações (Update - 5N)](results/distribution_charts/grafico_distribuicao_update.png)
 
 **Figura 9** - Comparação de Estabilidade: Atualizações (Update - 5N)
 *Fonte: Elaborada pelos autores (2026).*
 
-![Comparação de Estabilidade: Consultas (Query - 5N)](results/figura-10-estabilidade-query.png)
+![Comparação de Estabilidade: Consultas (Query - 5N)](results/distribution_charts/grafico_distribuicao_query.png)
 
 **Figura 10** - Comparação de Estabilidade: Consultas (Query - 5N)
 *Fonte: Elaborada pelos autores (2026).*
 
-![Comparação de Estabilidade: Operações Mistas (Mixed - 5N)](results/figura-11-estabilidade-mixed.png)
+![Comparação de Estabilidade: Operações Mistas (Mixed - 5N)](results/distribution_charts/grafico_distribuicao_mixed.png)
 
 **Figura 11** - Comparação de Estabilidade: Operações Mistas (Mixed - 5N)
 *Fonte: Elaborada pelos autores (2026).*
 
-![Comparação de Estabilidade: Tempo de Build](results/figura-12-estabilidade-build.png)
+![Comparação de Estabilidade: Tempo de Build](results/distribution_charts/grafico_distribuicao_build.png)
 
 **Figura 12** - Comparação de Estabilidade: Tempo de Build
 *Fonte: Elaborada pelos autores (2026).*
